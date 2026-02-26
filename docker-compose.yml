@@ -1,0 +1,9 @@
+services:
+  survey:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3020:3020"
+    env_file:
+      - .env.local
