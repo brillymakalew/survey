@@ -3,6 +3,7 @@
  * 1. Delete t23_affiliation_type, t23_country_base from panel_2
  * 2. Delete everything under phase_1 and phase_2 phase rows, then delete those rows
  */
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { createClient } = require('@supabase/supabase-js');
 const s = createClient(
     'https://tiyxkuiznwuzibkqonsk.supabase.co',

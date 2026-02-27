@@ -34,6 +34,16 @@ interface Props {
  * Renders all question types with conditional visibility and selection limits.
  */
 export default function QuestionRenderer({ question, value, onChange, allAnswers }: Props) {
+    const handleMultiSelect = useCallback((opt: string) => {
+        const current = Array.isArray(value) ? (value as string[]) : [];
+        const max = question.selection_max ?? Infinity;
+        if (current.includes(opt)) {
+            onChange(current.filter(v => v !== opt));
+        } else if (current.length < max) {
+            onChange([...current, opt]);
+        }
+    }, [value, question.selection_max, onChange]);
+
     // Conditional visibility check (PRD §10.4)
     const cond = question.conditional_logic_json?.show_if;
     if (cond) {
@@ -45,16 +55,6 @@ export default function QuestionRenderer({ question, value, onChange, allAnswers
         const visible = cond.answer_in.some(a => depAnswerArr.includes(a));
         if (!visible) return null;
     }
-
-    const handleMultiSelect = useCallback((opt: string) => {
-        const current = Array.isArray(value) ? (value as string[]) : [];
-        const max = question.selection_max ?? Infinity;
-        if (current.includes(opt)) {
-            onChange(current.filter(v => v !== opt));
-        } else if (current.length < max) {
-            onChange([...current, opt]);
-        }
-    }, [value, question.selection_max, onChange]);
 
     const selectedArr = Array.isArray(value) ? (value as string[]) : [];
     const atMax = selectedArr.length >= (question.selection_max ?? Infinity);
@@ -76,8 +76,8 @@ export default function QuestionRenderer({ question, value, onChange, allAnswers
                         <label
                             key={opt}
                             className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${value === opt
-                                    ? 'border-blue-400/60 bg-blue-500/15 text-white'
-                                    : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:bg-white/10'
+                                ? 'border-blue-400/60 bg-blue-500/15 text-white'
+                                : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:bg-white/10'
                                 }`}
                         >
                             <input
@@ -115,10 +115,10 @@ export default function QuestionRenderer({ question, value, onChange, allAnswers
                             <label
                                 key={opt}
                                 className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${selected
-                                        ? 'border-blue-400/60 bg-blue-500/15 text-white'
-                                        : atMax && !selected
-                                            ? 'border-white/5 bg-white/3 text-white/30 cursor-not-allowed'
-                                            : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:bg-white/10'
+                                    ? 'border-blue-400/60 bg-blue-500/15 text-white'
+                                    : atMax && !selected
+                                        ? 'border-white/5 bg-white/3 text-white/30 cursor-not-allowed'
+                                        : 'border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:bg-white/10'
                                     }`}
                             >
                                 <input
@@ -153,8 +153,8 @@ export default function QuestionRenderer({ question, value, onChange, allAnswers
                                 type="button"
                                 onClick={() => onChange(n)}
                                 className={`w-11 h-11 rounded-lg border font-semibold text-sm transition-all ${value === n
-                                        ? 'border-blue-400 bg-blue-500 text-white'
-                                        : 'border-white/20 bg-white/5 text-white/60 hover:border-blue-400/50 hover:bg-blue-500/10 hover:text-white'
+                                    ? 'border-blue-400 bg-blue-500 text-white'
+                                    : 'border-white/20 bg-white/5 text-white/60 hover:border-blue-400/50 hover:bg-blue-500/10 hover:text-white'
                                     }`}
                             >
                                 {n}

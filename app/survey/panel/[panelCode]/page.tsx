@@ -69,7 +69,7 @@ export default function PanelPage() {
         (async () => {
             try {
                 const [qRes, resumeRes] = await Promise.all([
-                    fetch(`/api/survey/questions?phase=${panelCode}`),
+                    fetch(`/api/survey/questions?phase=${panelCode}`, { headers: { 'x-session-token': sessionToken } }),
                     fetch('/api/respondent/resume', { headers: { 'x-session-token': sessionToken } }),
                 ]);
                 const qData = await qRes.json();
@@ -122,9 +122,25 @@ export default function PanelPage() {
 
     // ── Steps ─────────────────────────────────────────────────────────────
     const steps: Question[][] = [];
-    for (let i = 0; i < questions.length; i += QUESTIONS_PER_STEP) {
-        steps.push(questions.slice(i, i + QUESTIONS_PER_STEP));
+    let currentStep: Question[] = [];
+    let mainQCount = 0;
+
+    for (const q of questions) {
+        const isConditional = !!q.conditional_logic_json?.show_if;
+        if (!isConditional && mainQCount >= QUESTIONS_PER_STEP) {
+            steps.push(currentStep);
+            currentStep = [];
+            mainQCount = 0;
+        }
+        currentStep.push(q);
+        if (!isConditional) {
+            mainQCount++;
+        }
     }
+    if (currentStep.length > 0) {
+        steps.push(currentStep);
+    }
+
     const currentStepQs = steps[stepIndex] || [];
 
     // ── Auto-save ─────────────────────────────────────────────────────────
