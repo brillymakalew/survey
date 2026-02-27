@@ -171,9 +171,9 @@ select
   count(distinct r.id) filter (where pp3.status = 'completed')                     as phase3_completed,
   count(distinct r.id) filter (where ppc.status = 'completed')                     as closing_completed
 from respondents r
-left join survey_phases sp1 on sp1.phase_code = 'phase_1'
-left join survey_phases sp2 on sp2.phase_code = 'phase_2'
-left join survey_phases sp3 on sp3.phase_code = 'phase_3'
+left join survey_phases sp1 on sp1.phase_code = 'panel_1'
+left join survey_phases sp2 on sp2.phase_code = 'panel_2'
+left join survey_phases sp3 on sp3.phase_code = 'panel_3'
 left join survey_phases spc on spc.phase_code = 'closing'
 left join phase_progress pp1 on pp1.respondent_id = r.id and pp1.phase_id = sp1.id
 left join phase_progress pp2 on pp2.respondent_id = r.id and pp2.phase_id = sp2.id

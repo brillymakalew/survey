@@ -1,19 +1,23 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
 /**
  * Landing Page — PRD §5.3, §6.1, §12
  * Name + Phone form → POST /api/respondent/start → redirect to survey
  */
-export default function Home() {
+export function HomeContent() {
     const router = useRouter();
     const [fullName, setFullName] = useState('');
     const [phone, setPhone] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [resumeChecking, setResumeChecking] = useState(true);
+
+    const searchParams = useSearchParams();
+    const returnTo = searchParams.get('returnTo');
 
     // ── Auto-resume existing session ─────────────────────────────
     useEffect(() => {
@@ -36,7 +40,7 @@ export default function Home() {
                     (p: { progress?: { status: string } }) => p.progress?.status === 'completed'
                 );
                 if (allCompleted) {
-                    router.replace('/survey/done');
+                    router.replace('/done');
                     return;
                 }
                 for (const p of sortedPhases as Array<{ phase_code: string; progress?: { status: string } }>) {
@@ -47,7 +51,12 @@ export default function Home() {
                         resumePhase = p.phase_code; break;
                     }
                 }
-                router.replace(`/survey/panel/${resumePhase}`);
+                if (returnTo) {
+                    router.replace(`/${returnTo}`);
+                    return;
+                }
+
+                router.replace(`/${resumePhase}`);
             })
             .catch(() => setResumeChecking(false));
         // runs once on mount
@@ -92,11 +101,13 @@ export default function Home() {
                 localStorage.setItem('respondent_id', data.respondent_id);
             }
 
-            // Navigate to resume point
-            if (data.resume_phase === 'done') {
-                router.push('/survey/done');
+            // Navigate to resume point or specific panel
+            if (returnTo) {
+                router.push(`/${returnTo}`);
+            } else if (data.resume_phase === 'done') {
+                router.push('/done');
             } else {
-                router.push(`/survey/panel/${data.resume_phase}`);
+                router.push(`/${data.resume_phase}`);
             }
         } catch {
             setError('Network error. Please check your connection and try again.');
@@ -196,5 +207,14 @@ export default function Home() {
                 </div>
             </div>
         </main>
+    );
+}
+
+// Wrap the main functional component in suspense due to useSearchParams
+export default function Home() {
+    return (
+        <Suspense fallback={null}>
+            <HomeContent />
+        </Suspense>
     );
 }

@@ -9,7 +9,7 @@ import {
 
 const CHART_COLORS = ['#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444'];
 
-type TabId = 'overview' | 'funnel' | 'phases' | 'crosstabs' | 'responses' | 'exports';
+type TabId = 'overview' | 'funnel' | 'phases' | 'crosstabs' | 'responses' | 'questions' | 'exports';
 
 interface Respondent {
     id: string; full_name: string; phone_normalized: string;
@@ -32,7 +32,12 @@ interface OverviewData {
 }
 interface Pagination { page: number; total_pages: number; total: number; }
 
-const PHASES = ['phase_1', 'phase_2', 'phase_3', 'closing'];
+interface QuestionData {
+    option_counts: { question_code: string; prompt: string; question_type: string; opt_value: string; selection_count: number; }[];
+    likert_summary: { question_code: string; prompt: string; avg_score: number; response_count: number; min_score: number; max_score: number; }[];
+}
+
+const PHASES = ['panel_1', 'panel_2', 'panel_3', 'closing'];
 const FUNNEL_LABELS: Record<string, string> = {
     total_respondents: 'Identity Entered',
     phase1_started: 'Panel 1 Started',
@@ -51,6 +56,11 @@ export default function AdminDashboard() {
     const [pagination, setPagination] = useState<Pagination>({ page: 1, total_pages: 1, total: 0 });
     const [search, setSearch] = useState('');
     const [phaseFilter, setPhaseFilter] = useState('');
+    const [affiliationFilter, setAffiliationFilter] = useState('');
+    const [countryFilter, setCountryFilter] = useState('');
+
+    const [questionsData, setQuestionsData] = useState<QuestionData | null>(null);
+    const [qLoading, setQLoading] = useState(false);
 
     // Fetch overview data
     useEffect(() => {
@@ -87,6 +97,30 @@ export default function AdminDashboard() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab, pagination.page, search, phaseFilter]);
 
+    // Fetch questions data
+    useEffect(() => {
+        if (activeTab !== 'questions') return;
+        (async () => {
+            setQLoading(true);
+            try {
+                const params = new URLSearchParams({ phase: phaseFilter || 'panel_1' });
+                if (affiliationFilter) params.append('affiliation', affiliationFilter);
+                if (countryFilter) params.append('country', countryFilter);
+
+                const res = await fetch(`/api/admin/dashboard/questions?${params}`);
+                if (res.status === 401) { router.push('/admin/login'); return; }
+                const data = await res.json();
+                if (data.success) {
+                    setQuestionsData({
+                        option_counts: data.option_counts,
+                        likert_summary: data.likert_summary
+                    });
+                }
+            } catch { /* ignore */ }
+            setQLoading(false);
+        })();
+    }, [activeTab, phaseFilter, affiliationFilter, countryFilter, router]);
+
     async function handleLogout() {
         await fetch('/api/admin/logout', { method: 'POST' });
         router.push('/admin/login');
@@ -105,15 +139,16 @@ export default function AdminDashboard() {
         { id: 'phases', label: 'Per Phase' },
         { id: 'crosstabs', label: 'Crosstabs' },
         { id: 'responses', label: 'Responses' },
+        { id: 'questions', label: 'Questions' },
         { id: 'exports', label: 'Exports' },
     ];
 
     return (
-        <main className="min-h-screen bg-slate-900 text-white">
+        <main className="min-h-screen bg-slate-900 text-white pb-24">
             {/* Header */}
             <header className="border-b border-white/10 bg-slate-900/80 backdrop-blur sticky top-0 z-20">
                 <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-                    <h1 className="font-bold text-lg">Survey Admin</h1>
+                    <h1 className="font-bold text-lg pl-14 md:pl-40">Survey Admin</h1>
                     <button
                         onClick={handleLogout}
                         className="text-white/40 hover:text-white text-sm transition-colors"
@@ -306,7 +341,7 @@ export default function AdminDashboard() {
                             <select
                                 value={phaseFilter}
                                 onChange={e => { setPhaseFilter(e.target.value); setPagination(p => ({ ...p, page: 1 })); }}
-                                className="bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white text-sm focus:outline-none"
+                                className="bg-slate-800 border border-white/20 rounded-xl px-4 py-2 text-white text-sm focus:outline-none"
                             >
                                 <option value="">All Panels</option>
                                 {PHASES.map(p => <option key={p} value={p}>{p.replace('phase_', 'Panel ').replace('closing', 'Closing')}</option>)}
@@ -362,6 +397,102 @@ export default function AdminDashboard() {
                                     className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white/60
                     disabled:opacity-30 hover:bg-white/10 transition-all"
                                 >Next →</button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* ── QUESTIONS ────────────────────────────────── */}
+                {activeTab === 'questions' && (
+                    <div className="space-y-6">
+                        <div className="flex flex-wrap gap-3 items-center mb-6">
+                            <select
+                                value={phaseFilter || 'panel_1'}
+                                onChange={e => setPhaseFilter(e.target.value)}
+                                className="bg-slate-800 border border-white/20 rounded-xl px-4 py-2 text-white text-sm focus:outline-none"
+                            >
+                                {PHASES.map(p => <option key={p} value={p}>{p.replace('panel_', 'Panel ').replace('closing', 'Closing')}</option>)}
+                            </select>
+
+                            <select
+                                value={affiliationFilter}
+                                onChange={e => setAffiliationFilter(e.target.value)}
+                                className="bg-slate-800 border border-white/20 rounded-xl px-4 py-2 text-white text-sm focus:outline-none"
+                            >
+                                <option value="">All Affiliations</option>
+                                <option value="Academia">Academia</option>
+                                <option value="Industry">Industry</option>
+                                <option value="Government">Government</option>
+                            </select>
+
+                            <select
+                                value={countryFilter}
+                                onChange={e => setCountryFilter(e.target.value)}
+                                className="bg-slate-800 border border-white/20 rounded-xl px-4 py-2 text-white text-sm focus:outline-none"
+                            >
+                                <option value="">All Countries</option>
+                                <option value="Indonesia">Indonesia</option>
+                                <option value="UK">UK</option>
+                                <option value="Both">Both</option>
+                            </select>
+                        </div>
+
+                        {qLoading && <div className="text-white/40 text-sm">Loading questions...</div>}
+
+                        {!qLoading && questionsData && (
+                            <div className="space-y-8">
+                                {/* Option Counts Rendering */}
+                                {questionsData.option_counts.length > 0 && (
+                                    <div className="space-y-6">
+                                        <h3 className="font-semibold text-lg border-b border-white/10 pb-2">Multiple Choice & Selection</h3>
+                                        <div className="grid lg:grid-cols-2 gap-6">
+                                            {Array.from(new Set(questionsData.option_counts.map(q => q.question_code))).map(code => {
+                                                const opts = questionsData.option_counts.filter(q => q.question_code === code);
+                                                const prompt = opts[0]?.prompt;
+                                                return (
+                                                    <div key={code} className="bg-white/5 border border-white/10 rounded-2xl p-5">
+                                                        <h4 className="font-medium text-white/80 mb-4 text-sm">{prompt}</h4>
+                                                        <ResponsiveContainer width="100%" height={200}>
+                                                            <BarChart data={opts} layout="vertical" margin={{ left: 0, right: 30 }}>
+                                                                <XAxis type="number" stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 11 }} />
+                                                                <YAxis dataKey="opt_value" type="category" width={100} tick={{ fill: '#ffffff80', fontSize: 11 }} />
+                                                                <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #ffffff20', borderRadius: 8 }} />
+                                                                <Bar dataKey="selection_count" fill="#8b5cf6" radius={[0, 4, 4, 0]} label={{ position: 'right', fill: '#ffffff90', fontSize: 11 }} />
+                                                            </BarChart>
+                                                        </ResponsiveContainer>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Likert Rendering */}
+                                {questionsData.likert_summary.length > 0 && (
+                                    <div className="space-y-6">
+                                        <h3 className="font-semibold text-lg border-b border-white/10 pb-2">Likert Scales (1-7)</h3>
+                                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {questionsData.likert_summary.map(l => (
+                                                <div key={l.question_code} className="bg-white/5 border border-white/10 rounded-2xl p-5">
+                                                    <h4 className="font-medium text-white/80 mb-3 text-sm line-clamp-3" title={l.prompt}>{l.prompt}</h4>
+                                                    <div className="flex items-end gap-3 mb-2">
+                                                        <span className="text-3xl font-bold text-blue-400">{l.avg_score.toFixed(1)}</span>
+                                                        <span className="text-white/40 text-sm pb-1">Average</span>
+                                                    </div>
+                                                    <div className="flex justify-between text-xs text-white/30 border-t border-white/10 pt-2">
+                                                        <span>Min: {l.min_score}</span>
+                                                        <span>Max: {l.max_score}</span>
+                                                        <span>{l.response_count} responses</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {questionsData.option_counts.length === 0 && questionsData.likert_summary.length === 0 && (
+                                    <div className="text-white/40 text-sm">No responses yet for this phase.</div>
+                                )}
                             </div>
                         )}
                     </div>

@@ -65,7 +65,7 @@ export default function PanelPage() {
 
     // ── Load questions + state ──────────────────────────────────────────
     useEffect(() => {
-        if (!sessionToken) { router.push('/'); return; }
+        if (!sessionToken) { router.push(`/?returnTo=${panelCode}`); return; }
         (async () => {
             try {
                 const [qRes, resumeRes] = await Promise.all([
@@ -84,14 +84,8 @@ export default function PanelPage() {
                     const currentPanel = resumeData.phases.find((p: PhaseInfo) => p.phase_code === panelCode);
                     if (!currentPanel) { setPanelError('Panel not found.'); setLoading(false); return; }
 
-                    // Phase locking — redirect to first incomplete panel
-                    const sorted: PhaseInfo[] = [...resumeData.phases].sort((a, b) => a.sort_order - b.sort_order);
-                    for (const p of sorted) {
-                        if (p.phase_code === panelCode) break;
-                        if (!p.progress || p.progress.status !== 'completed') {
-                            router.push(`/survey/panel/${p.phase_code}`); return;
-                        }
-                    }
+                    // Phase locking removed: Users are allowed to jump directly to any panel.
+                    // The backend API already handles injecting affiliation/country questions if they are missing.
 
                     // If already completed, skip straight past welcome
                     if (currentPanel.progress?.status === 'completed') {
@@ -127,11 +121,20 @@ export default function PanelPage() {
 
     for (const q of questions) {
         const isConditional = !!q.conditional_logic_json?.show_if;
-        if (!isConditional && mainQCount >= QUESTIONS_PER_STEP) {
+
+        // Force page break BEFORE the "understanding" question
+        const isUnderstandingQuestion = q.prompt.toLowerCase().includes('understanding of research translation is clearer');
+
+        if (isUnderstandingQuestion && currentStep.length > 0) {
+            steps.push(currentStep);
+            currentStep = [];
+            mainQCount = 0;
+        } else if (!isConditional && mainQCount >= QUESTIONS_PER_STEP) {
             steps.push(currentStep);
             currentStep = [];
             mainQCount = 0;
         }
+
         currentStep.push(q);
         if (!isConditional) {
             mainQCount++;
@@ -237,9 +240,9 @@ export default function PanelPage() {
         setSubmitting(false);
         if (!res.ok || !data.success) { setSubmitError(data.error || 'Submission failed. Please try again.'); return; }
         if (data.next_phase === 'done') {
-            router.push('/survey/done');
+            router.push('/done');
         } else {
-            router.push(`/survey/between?from=${panelCode}`);
+            router.push(`/between?from=${panelCode}`);
         }
     }
 
