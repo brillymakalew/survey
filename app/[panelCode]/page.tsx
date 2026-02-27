@@ -347,11 +347,10 @@ export default function PanelPage() {
     // ── QUESTIONNAIRE ──────────────────────────────────────────────────────
     return (
         <main className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-900">
-            <div className="max-w-xl mx-auto px-4 py-6 pb-24">
+            <div className="max-w-xl mx-auto px-4 pt-16 md:pt-6 pb-24">
 
                 {/* Top bar */}
-                <div className="flex items-center justify-between mb-5">
-                    <span className="text-white/40 text-xs font-medium">{meta.title}</span>
+                <div className="flex items-center justify-end mb-5">
                     <span className="text-white/25 text-xs">
                         {saving ? '● Saving…' : lastSaved ? `Saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
                     </span>
