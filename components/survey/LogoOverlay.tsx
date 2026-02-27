@@ -3,7 +3,7 @@ export default function LogoOverlay() {
     // Logos are now globally visible as requested, even on /admin
 
     return (
-        <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none z-50 overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
                 src="/logo/british_council.png"
