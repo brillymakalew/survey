@@ -162,7 +162,7 @@ export function HomeContent() {
                                 type="tel"
                                 value={phone}
                                 onChange={e => setPhone(e.target.value)}
-                                placeholder="e.g. 0812 3456 7890"
+                                placeholder="e.g. +44 7123 456789 or 0812 3456"
                                 autoComplete="tel"
                                 required
                                 className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-white/30

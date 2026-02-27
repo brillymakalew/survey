@@ -15,7 +15,7 @@ export default function LogoOverlay() {
                 <img
                     src="/logo/logo-rtt-2.png"
                     alt="Binus Research"
-                    className="h-5 md:h-8 w-auto object-contain drop-shadow-lg"
+                    className="h-7 md:h-10 w-auto object-contain drop-shadow-lg"
                 />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
