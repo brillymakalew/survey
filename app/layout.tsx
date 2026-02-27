@@ -5,9 +5,9 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-    title: 'UK–Indonesia Research Forum | Questionnaire',
+    title: 'UK-Indonesia Research Translation Forum | Questionnaire',
     description:
-        'Multi-phase questionnaire on research translation pathways for the UK–Indonesia Research Forum.',
+        'Multi-phase questionnaire on research translation pathways for the UK-Indonesia Research Translation Forum.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

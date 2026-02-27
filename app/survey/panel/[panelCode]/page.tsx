@@ -279,7 +279,7 @@ export default function PanelPage() {
                     {/* Badge */}
                     <div className="flex justify-center mb-6">
                         <span className="inline-flex items-center gap-2 bg-blue-500/15 border border-blue-400/25 text-blue-300 text-xs font-medium px-3 py-1.5 rounded-full">
-                            UK–Indonesia Research Forum
+                            UK-Indonesia Research Translation Forum
                         </span>
                     </div>
 
