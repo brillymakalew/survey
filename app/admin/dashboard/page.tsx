@@ -146,9 +146,9 @@ export default function AdminDashboard() {
     return (
         <main className="min-h-screen bg-slate-900 text-white pb-24">
             {/* Header */}
-            <header className="border-b border-white/10 bg-slate-900/80 backdrop-blur sticky top-0 z-20">
+            <header className="border-b border-white/10 bg-slate-900/80 backdrop-blur sticky top-0 z-20 pl-20 md:pl-52">
                 <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-                    <h1 className="font-bold text-lg pl-14 md:pl-40">Survey Admin</h1>
+                    <h1 className="font-bold text-lg">Survey Admin</h1>
                     <button
                         onClick={handleLogout}
                         className="text-white/40 hover:text-white text-sm transition-colors"
