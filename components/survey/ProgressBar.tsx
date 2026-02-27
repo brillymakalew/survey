@@ -29,12 +29,12 @@ export default function ProgressBar({
                     const isCurrent = phase.phase_code === currentPhaseCode;
                     const isPast = idx < currentIdx;
                     return (
-                        <div key={phase.phase_code} className="flex-1 flex items-center">
+                        <div key={phase.phase_code} className={`${idx === sorted.length - 1 ? 'flex-none' : 'flex-1'} flex items-center`}>
                             <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 text-xs font-bold flex-shrink-0 transition-all ${isCompleted || isPast
-                                    ? 'bg-blue-500 border-blue-500 text-white'
-                                    : isCurrent
-                                        ? 'bg-blue-500/20 border-blue-400 text-blue-300'
-                                        : 'bg-white/5 border-white/20 text-white/30'
+                                ? 'bg-blue-500 border-blue-500 text-white'
+                                : isCurrent
+                                    ? 'bg-blue-500/20 border-blue-400 text-blue-300'
+                                    : 'bg-white/5 border-white/20 text-white/30'
                                 }`}>
                                 {isCompleted || isPast ? (
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
