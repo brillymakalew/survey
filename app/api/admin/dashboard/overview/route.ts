@@ -15,31 +15,86 @@ export async function GET(request: NextRequest) {
         const startDate = searchParams.get('start_date');
         const endDate = searchParams.get('end_date');
 
-        // Funnel from view
-        const { data: funnel } = await supabase
-            .from('vw_response_funnel')
-            .select('*')
-            .single();
+        // Instead of the broken view, compute funnel in memory
+        const { count: totalRespondents } = await supabase
+            .from('respondents')
+            .select('*', { count: 'exact', head: true });
+
+        const { data: allPhases } = await supabase.from('survey_phases').select('id, phase_code');
+        const { data: allProgress } = await supabase.from('phase_progress').select('phase_id, status');
+
+        const phaseIdMap = (allPhases || []).reduce((acc, p) => ({ ...acc, [p.phase_code]: p.id }), {} as Record<string, string>);
+
+        const countProgress = (phaseCode: string, statuses: string[]) => {
+            const phaseId = phaseIdMap[phaseCode];
+            if (!phaseId || !allProgress) return 0;
+            return allProgress.filter(p => p.phase_id === phaseId && statuses.includes(p.status)).length;
+        };
+
+        const funnel = {
+            total_respondents: totalRespondents || 0,
+            phase1_started: countProgress('panel_1', ['in_progress', 'completed']),
+            phase1_completed: countProgress('panel_1', ['completed']),
+            phase2_completed: countProgress('panel_2', ['completed']),
+            phase3_completed: countProgress('panel_3', ['completed']),
+            closing_completed: countProgress('closing', ['completed']),
+        };
 
         // Phase completion stats
         const { data: phaseStats } = await supabase
             .from('vw_phase_completion_stats')
             .select('*');
 
-        // Affiliation × country breakdown
-        const { data: affiliationData } = await supabase
-            .from('vw_affiliation_country_breakdown')
-            .select('*');
 
-        // Collaboration intent summary
-        const { data: intentData } = await supabase
-            .from('vw_collaboration_intent_summary')
-            .select('*');
 
-        // Total respondents + recent list (with optional date filter)
-        const { count: totalRespondents } = await supabase
-            .from('respondents')
-            .select('*', { count: 'exact', head: true });
+        // Dynamically compute affiliation and collaboration instead of using broken views
+        const { data: qAffiliation } = await supabase.from('survey_questions').select('id, question_code').in('question_code', ['affiliation_type', 'country_base']);
+        const { data: qIntent } = await supabase.from('survey_questions').select('id, question_code').eq('question_code', 'collaboration_intent');
+
+        const affilMap = (qAffiliation || []).reduce((acc, q) => ({ ...acc, [q.question_code]: q.id }), {} as Record<string, string>);
+        const intentId = qIntent?.[0]?.id;
+
+        const { data: responses } = await supabase.from('survey_responses').select('respondent_id, question_id, answer_value_json');
+
+        const respData = new Map<string, { affiliation?: string, country_base?: string, intent?: string }>();
+
+        responses?.forEach(r => {
+            const rid = r.respondent_id;
+            if (!respData.has(rid)) respData.set(rid, {});
+            const item = respData.get(rid)!;
+
+            const ans = String(r.answer_value_json).replace(/^"|"$/g, ''); // Unquote if needed
+
+            if (r.question_id === affilMap['affiliation_type']) item.affiliation = ans || 'Unknown';
+            if (r.question_id === affilMap['country_base']) item.country_base = ans || 'Unknown';
+            if (r.question_id === intentId) item.intent = ans || 'Unknown';
+        });
+
+        // 1. Agg Affiliation Breakdown
+        const affilCount = new Map<string, number>();
+        Array.from(respData.values()).forEach(d => {
+            if (d.affiliation || d.country_base) {
+                const key = `${d.affiliation || 'Unknown'}|${d.country_base || 'Unknown'}`;
+                affilCount.set(key, (affilCount.get(key) || 0) + 1);
+            }
+        });
+        const affiliationData = Array.from(affilCount.entries()).map(([k, count]) => {
+            const [affiliation, country_base] = k.split('|');
+            return { affiliation, country_base, respondent_count: count };
+        });
+
+        // 2. Agg Collaboration Intent
+        const intentCount = new Map<string, number>();
+        let totalIntents = 0;
+        Array.from(respData.values()).forEach(d => {
+            if (d.intent) {
+                intentCount.set(d.intent, (intentCount.get(d.intent) || 0) + 1);
+                totalIntents++;
+            }
+        });
+        const intentData = Array.from(intentCount.entries()).map(([intent, count]) => ({
+            intent, respondent_count: count, pct: totalIntents > 0 ? (count / totalIntents) * 100 : 0
+        }));
 
         let recentQuery = supabase
             .from('respondents')

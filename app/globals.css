@@ -24,3 +24,48 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes float {
+  0% { transform: translateY(0) translateX(0); }
+  50% { transform: translateY(-10px) translateX(10px); }
+  100% { transform: translateY(0) translateX(0); }
+}
+
+@keyframes float-reverse {
+  0% { transform: translateY(0) translateX(0); }
+  50% { transform: translateY(10px) translateX(-10px); }
+  100% { transform: translateY(0) translateX(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.05; transform: scale(1); }
+  50% { opacity: 0.15; transform: scale(1.1); }
+}
+
+.particles-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.particle-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(40px);
+  animation: pulse-glow 8s ease-in-out infinite;
+}
+
+.grid-pattern {
+  position: absolute;
+  inset: 0;
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  mask-image: linear-gradient(to bottom, black 20%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 20%, transparent 100%);
+  z-index: 0;
+  pointer-events: none;
+}
