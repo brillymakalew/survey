@@ -9,7 +9,7 @@ import {
 
 const CHART_COLORS = ['#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444'];
 
-type TabId = 'overview' | 'funnel' | 'phases' | 'crosstabs' | 'responses' | 'questions' | 'exports' | 'deleted';
+type TabId = 'overview' | 'funnel' | 'phases' | 'crosstabs' | 'responses' | 'questions' | 'exports' | 'deleted' | 'ai-summary';
 
 interface Respondent {
     id: string; full_name: string; phone_normalized: string;
@@ -93,6 +93,27 @@ export default function AdminDashboard() {
     const [importType, setImportType] = useState('respondents');
     const [isImporting, setIsImporting] = useState(false);
     const [importMessage, setImportMessage] = useState('');
+
+    // New State for AI Summarization
+    const [aiSummary, setAiSummary] = useState('');
+    const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+
+    // Fetch AI summary from DB on mount
+    useEffect(() => {
+        (async () => {
+            try {
+                const res = await fetch('/api/admin/dashboard/ai-summary');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success && data.summary) {
+                        setAiSummary(data.summary);
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to load initial AI summary', e);
+            }
+        })();
+    }, []);
 
     // Fetch overview data
     useEffect(() => {
@@ -283,6 +304,24 @@ export default function AdminDashboard() {
         setIsImporting(false);
     }
 
+    const handleGenerateSummary = async () => {
+        setIsGeneratingSummary(true);
+        setAiSummary('');
+        try {
+            const res = await fetch('/api/admin/dashboard/ai-summary', { method: 'POST' });
+            if (res.status === 401) { router.push('/admin/login'); return; }
+            const data = await res.json();
+            if (data.success) {
+                setAiSummary(data.summary);
+            } else {
+                setAiSummary('Error: ' + data.error);
+            }
+        } catch (e) {
+            setAiSummary('Error generating summary');
+        }
+        setIsGeneratingSummary(false);
+    };
+
     const funnel: FunnelEntry[] = overview
         ? Object.entries(FUNNEL_LABELS).map(([key, label]) => ({
             label,
@@ -311,6 +350,7 @@ export default function AdminDashboard() {
         { id: 'questions', label: 'Questions' },
         { id: 'exports', label: 'Exports' },
         { id: 'deleted', label: 'Deletion History' },
+        { id: 'ai-summary', label: 'AI Summarization' },
     ];
 
     return (
@@ -982,244 +1022,340 @@ export default function AdminDashboard() {
                         </div>
                     </div>
                 )}
+
+                {/* ── AI SUMMARIZATION ──────────────────────────── */}
+                {activeTab === 'ai-summary' && (
+                    <div className="space-y-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="font-semibold text-lg">AI Insights &amp; Findings</h2>
+                            <button
+                                onClick={handleGenerateSummary}
+                                disabled={isGeneratingSummary}
+                                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50 disabled:text-white/50 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-lg shadow-indigo-500/20"
+                            >
+                                {isGeneratingSummary ? (
+                                    <>
+                                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                                        </svg>
+                                        Analyzing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                        {aiSummary ? 'Regenerate AI Summary' : 'Generate AI Summary'}
+                                    </>
+                                )}
+                            </button>
+                        </div>
+
+                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 min-h-[400px]">
+                            {isGeneratingSummary ? (
+                                <div className="h-full flex flex-col items-center justify-center text-white/50 py-32">
+                                    <svg className="animate-spin h-10 w-10 mb-6 text-indigo-400" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                        <path className="opacity-75" fill="currentColor" strokeLinecap="round" d="M4 12a8 8 0 018-8v8H4z" />
+                                    </svg>
+                                    <p className="text-lg font-medium animate-pulse text-indigo-200">AI is analyzing the survey data...</p>
+                                    <p className="text-sm mt-2 opacity-60">This may take a few seconds.</p>
+                                </div>
+                            ) : aiSummary ? (
+                                <div className="prose prose-invert prose-indigo max-w-none text-white/80">
+                                    {aiSummary.split('\n').map((line, i) => {
+                                        if (line.startsWith('### ')) return <h3 key={i} className="text-lg font-semibold text-indigo-300 mt-6 mb-3">{line.replace('### ', '').replace(/\\*\\*/g, '')}</h3>;
+                                        if (line.startsWith('## ')) return <h2 key={i} className="text-xl font-bold text-white mt-8 mb-4 border-b border-white/10 pb-2">{line.replace('## ', '').replace(/\\*\\*/g, '')}</h2>;
+                                        if (line.startsWith('# ')) return <h1 key={i} className="text-2xl font-extrabold text-white mt-8 mb-6">{line.replace('# ', '').replace(/\\*\\*/g, '')}</h1>;
+                                        if (line.startsWith('- ') || line.startsWith('* ')) {
+                                            const content = line.substring(2);
+                                            // Bold text processing
+                                            const parts = content.split(/(\*\*.*?\*\*)/g);
+                                            return (
+                                                <li key={i} className="ml-6 mb-2 list-disc marker:text-indigo-400">
+                                                    {parts.map((part, j) =>
+                                                        part.startsWith('**') && part.endsWith('**')
+                                                            ? <strong key={j} className="text-white font-semibold">{part.slice(2, -2)}</strong>
+                                                            : part
+                                                    )}
+                                                </li>
+                                            );
+                                        }
+                                        if (line.trim() === '') return <div key={i} className="h-4" />;
+
+                                        const parts = line.split(/(\*\*.*?\*\*)/g);
+                                        return (
+                                            <p key={i} className="mb-4 leading-relaxed">
+                                                {parts.map((part, j) =>
+                                                    part.startsWith('**') && part.endsWith('**')
+                                                        ? <strong key={j} className="text-white font-semibold">{part.slice(2, -2)}</strong>
+                                                        : part
+                                                )}
+                                            </p>
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="h-full flex flex-col items-center justify-center text-white/40 py-28 text-center bg-slate-900/50 rounded-xl border border-dashed border-white/10">
+                                    <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mb-6">
+                                        <svg className="w-8 h-8 text-indigo-400 opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                                        </svg>
+                                    </div>
+                                    <p className="text-lg font-medium text-white/70">No Insights Generated Yet</p>
+                                    <p className="text-sm mt-2 max-w-sm mx-auto">Click the generate button above to analyze your dataset using AI and uncover key findings and action items.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Full Screen Chart Modal */}
-            {fullScreenChart && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/95 backdrop-blur-sm">
-                    <div className="w-full h-full max-w-7xl bg-slate-800 border border-white/10 rounded-2xl flex flex-col shadow-2xl relative overflow-hidden">
-                        {fullScreenChart === 'pie' && overview && overview.collaboration_intent.length > 0 && (
-                            <>
-                                <div className="flex items-center justify-between p-6 border-b border-white/10 bg-slate-800/50">
-                                    <h3 className="text-xl font-bold text-white pr-8">Collaboration Intent</h3>
-                                    <button onClick={() => setFullScreenChart(null)} className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors absolute top-4 right-4">
-                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                    </button>
-                                </div>
-                                <div className="flex-1 p-6 flex items-center justify-center">
-                                    <ResponsiveContainer width="100%" height="100%" minHeight={400}>
-                                        <PieChart>
-                                            <Pie data={overview.collaboration_intent} dataKey="respondent_count" nameKey="intent" cx="50%" cy="50%" outerRadius={250} label={({ name, value }) => `${name} (${value})`} labelLine={true}>
-                                                {overview.collaboration_intent.map((_entry, i) => (
-                                                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                                                ))}
-                                            </Pie>
-                                            <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                                            <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #ffffff20', borderRadius: 8, fontSize: '16px' }} itemStyle={{ color: '#ffffff' }} />
-                                        </PieChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </>
-                        )}
-                        {fullScreenChart === 'funnel' && (
-                            <>
-                                <div className="flex items-center justify-between p-6 border-b border-white/10 bg-slate-800/50">
-                                    <h3 className="text-xl font-bold text-white pr-8">Response Funnel</h3>
-                                    <button onClick={() => setFullScreenChart(null)} className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors absolute top-4 right-4">
-                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                                    </button>
-                                </div>
-                                <div className="flex-1 p-6">
-                                    <ResponsiveContainer width="100%" height="100%" minHeight={400}>
-                                        <BarChart data={funnel} layout="vertical" margin={{ left: 20, right: 60, top: 20, bottom: 20 }}>
-                                            <XAxis type="number" stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 16 }} />
-                                            <YAxis dataKey="label" type="category" width={220} tick={{ fill: '#ffffff80', fontSize: 16 }} />
-                                            <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #ffffff20', borderRadius: 8, fontSize: '16px' }} itemStyle={{ color: '#ffffff' }} cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} />
-                                            <Bar dataKey="value" fill="#3b82f6" radius={[0, 6, 6, 0]} label={{ position: 'right', fill: '#ffffff90', fontSize: 16, fontWeight: 'bold' }} />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </div>
-                            </>
-                        )}
-                        {fullScreenChart.startsWith('q_') && questionsData && (() => {
-                            const code = fullScreenChart.replace('q_', '');
-                            const opts = questionsData.option_counts.filter(q => q.question_code === code);
-                            if (!opts.length) return null;
-                            const prompt = opts[0]?.prompt;
-                            const chartHeight = Math.max(500, opts.length * 80);
-                            return (
+            {
+                fullScreenChart && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-slate-900/95 backdrop-blur-sm">
+                        <div className="w-full h-full max-w-7xl bg-slate-800 border border-white/10 rounded-2xl flex flex-col shadow-2xl relative overflow-hidden">
+                            {fullScreenChart === 'pie' && overview && overview.collaboration_intent.length > 0 && (
                                 <>
-                                    <div className="flex items-center justify-between p-6 border-b border-white/10 bg-slate-800/50 shrink-0">
-                                        <h3 className="text-xl font-bold text-white pr-8 leading-tight">{prompt}</h3>
-                                        <button onClick={() => setFullScreenChart(null)} className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors absolute top-4 right-4 focus:outline-none">
+                                    <div className="flex items-center justify-between p-6 border-b border-white/10 bg-slate-800/50">
+                                        <h3 className="text-xl font-bold text-white pr-8">Collaboration Intent</h3>
+                                        <button onClick={() => setFullScreenChart(null)} className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors absolute top-4 right-4">
                                             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                         </button>
                                     </div>
-                                    <div className="flex-1 p-6 overflow-y-auto w-full">
-                                        <ResponsiveContainer width="100%" height={chartHeight}>
-                                            <BarChart data={opts} layout="vertical" margin={{ left: 20, right: 60, top: 20, bottom: 20 }}>
-                                                <defs>
-                                                    <linearGradient id="colorGlowModal" x1="0" y1="0" x2="1" y2="0">
-                                                        <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.8} />
-                                                        <stop offset="100%" stopColor="#d946ef" stopOpacity={1} />
-                                                    </linearGradient>
-                                                    <filter id="glowEffectModal" x="-20%" y="-20%" width="140%" height="140%">
-                                                        <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#d946ef" floodOpacity="0.6" />
-                                                    </filter>
-                                                </defs>
-                                                <XAxis type="number" stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 14 }} />
-                                                <YAxis dataKey="opt_value" type="category" width={350} tick={{ fill: '#ffffff80', fontSize: 14 }} />
-                                                <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #ffffff20', borderRadius: 8, fontSize: '14px' }} itemStyle={{ color: '#ffffff' }} cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} />
-                                                <Bar
-                                                    dataKey="selection_count"
-                                                    fill="url(#colorGlowModal)"
-                                                    radius={[0, 8, 8, 0]}
-                                                    label={{ position: 'right', fill: '#ffffff90', fontSize: 16, fontWeight: 'bold' }}
-                                                    shape={(props: any) => {
-                                                        const { x, y, width, height } = props;
-                                                        return <rect x={x} y={y + 6} width={width} height={Math.max(6, height - 12)} fill="url(#colorGlowModal)" rx={8} ry={8} filter="url(#glowEffectModal)" />;
-                                                    }}
-                                                />
+                                    <div className="flex-1 p-6 flex items-center justify-center">
+                                        <ResponsiveContainer width="100%" height="100%" minHeight={400}>
+                                            <PieChart>
+                                                <Pie data={overview.collaboration_intent} dataKey="respondent_count" nameKey="intent" cx="50%" cy="50%" outerRadius={250} label={({ name, value }) => `${name} (${value})`} labelLine={true}>
+                                                    {overview.collaboration_intent.map((_entry, i) => (
+                                                        <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                                                    ))}
+                                                </Pie>
+                                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                                                <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #ffffff20', borderRadius: 8, fontSize: '16px' }} itemStyle={{ color: '#ffffff' }} />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </>
+                            )}
+                            {fullScreenChart === 'funnel' && (
+                                <>
+                                    <div className="flex items-center justify-between p-6 border-b border-white/10 bg-slate-800/50">
+                                        <h3 className="text-xl font-bold text-white pr-8">Response Funnel</h3>
+                                        <button onClick={() => setFullScreenChart(null)} className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors absolute top-4 right-4">
+                                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                        </button>
+                                    </div>
+                                    <div className="flex-1 p-6">
+                                        <ResponsiveContainer width="100%" height="100%" minHeight={400}>
+                                            <BarChart data={funnel} layout="vertical" margin={{ left: 20, right: 60, top: 20, bottom: 20 }}>
+                                                <XAxis type="number" stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 16 }} />
+                                                <YAxis dataKey="label" type="category" width={220} tick={{ fill: '#ffffff80', fontSize: 16 }} />
+                                                <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #ffffff20', borderRadius: 8, fontSize: '16px' }} itemStyle={{ color: '#ffffff' }} cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} />
+                                                <Bar dataKey="value" fill="#3b82f6" radius={[0, 6, 6, 0]} label={{ position: 'right', fill: '#ffffff90', fontSize: 16, fontWeight: 'bold' }} />
                                             </BarChart>
                                         </ResponsiveContainer>
                                     </div>
                                 </>
-                            );
-                        })()}
+                            )}
+                            {fullScreenChart.startsWith('q_') && questionsData && (() => {
+                                const code = fullScreenChart.replace('q_', '');
+                                const opts = questionsData.option_counts.filter(q => q.question_code === code);
+                                if (!opts.length) return null;
+                                const prompt = opts[0]?.prompt;
+                                const chartHeight = Math.max(500, opts.length * 80);
+                                return (
+                                    <>
+                                        <div className="flex items-center justify-between p-6 border-b border-white/10 bg-slate-800/50 shrink-0">
+                                            <h3 className="text-xl font-bold text-white pr-8 leading-tight">{prompt}</h3>
+                                            <button onClick={() => setFullScreenChart(null)} className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors absolute top-4 right-4 focus:outline-none">
+                                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                                            </button>
+                                        </div>
+                                        <div className="flex-1 p-6 overflow-y-auto w-full">
+                                            <ResponsiveContainer width="100%" height={chartHeight}>
+                                                <BarChart data={opts} layout="vertical" margin={{ left: 20, right: 60, top: 20, bottom: 20 }}>
+                                                    <defs>
+                                                        <linearGradient id="colorGlowModal" x1="0" y1="0" x2="1" y2="0">
+                                                            <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.8} />
+                                                            <stop offset="100%" stopColor="#d946ef" stopOpacity={1} />
+                                                        </linearGradient>
+                                                        <filter id="glowEffectModal" x="-20%" y="-20%" width="140%" height="140%">
+                                                            <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#d946ef" floodOpacity="0.6" />
+                                                        </filter>
+                                                    </defs>
+                                                    <XAxis type="number" stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 14 }} />
+                                                    <YAxis dataKey="opt_value" type="category" width={350} tick={{ fill: '#ffffff80', fontSize: 14 }} />
+                                                    <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #ffffff20', borderRadius: 8, fontSize: '14px' }} itemStyle={{ color: '#ffffff' }} cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} />
+                                                    <Bar
+                                                        dataKey="selection_count"
+                                                        fill="url(#colorGlowModal)"
+                                                        radius={[0, 8, 8, 0]}
+                                                        label={{ position: 'right', fill: '#ffffff90', fontSize: 16, fontWeight: 'bold' }}
+                                                        shape={(props: any) => {
+                                                            const { x, y, width, height } = props;
+                                                            return <rect x={x} y={y + 6} width={width} height={Math.max(6, height - 12)} fill="url(#colorGlowModal)" rx={8} ry={8} filter="url(#glowEffectModal)" />;
+                                                        }}
+                                                    />
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </div>
+                                    </>
+                                );
+                            })()}
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Clear Data Modal */}
-            {showClearModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-slate-800 border border-red-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl">
-                        <div className="flex items-center gap-3 mb-4 text-red-400">
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            <h2 className="text-lg font-bold">Clear All Data</h2>
-                        </div>
-                        <p className="text-white/70 text-sm mb-4">
-                            You are about to permanently delete all respondent profiles, progress, and survey answers. <strong>This action cannot be undone.</strong>
-                        </p>
-                        <p className="text-white/70 text-sm mb-2">
-                            Please type <span className="font-mono bg-black/30 px-1 py-0.5 rounded text-white font-bold select-all">saya setuju</span> to confirm.
-                        </p>
-                        <input
-                            type="text"
-                            value={clearInput}
-                            onChange={(e) => setClearInput(e.target.value)}
-                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-white/20 focus:outline-none focus:border-red-500/50 mb-6"
-                            placeholder="saya setuju"
-                            autoComplete="off"
-                        />
-                        <div className="flex justify-end gap-3">
-                            <button
-                                onClick={() => {
-                                    setShowClearModal(false);
-                                    setClearInput('');
-                                }}
-                                className="px-4 py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-colors"
-                                disabled={isClearing}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleClearData}
-                                disabled={clearInput !== 'saya setuju' || isClearing}
-                                className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-red-600/30 disabled:text-white/30 text-white rounded-lg text-sm font-medium transition-colors"
-                            >
-                                {isClearing ? 'Deleting...' : 'Wipe Database'}
-                            </button>
+            {
+                showClearModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <div className="bg-slate-800 border border-red-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                            <div className="flex items-center gap-3 mb-4 text-red-400">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <h2 className="text-lg font-bold">Clear All Data</h2>
+                            </div>
+                            <p className="text-white/70 text-sm mb-4">
+                                You are about to permanently delete all respondent profiles, progress, and survey answers. <strong>This action cannot be undone.</strong>
+                            </p>
+                            <p className="text-white/70 text-sm mb-2">
+                                Please type <span className="font-mono bg-black/30 px-1 py-0.5 rounded text-white font-bold select-all">saya setuju</span> to confirm.
+                            </p>
+                            <input
+                                type="text"
+                                value={clearInput}
+                                onChange={(e) => setClearInput(e.target.value)}
+                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-white/20 focus:outline-none focus:border-red-500/50 mb-6"
+                                placeholder="saya setuju"
+                                autoComplete="off"
+                            />
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowClearModal(false);
+                                        setClearInput('');
+                                    }}
+                                    className="px-4 py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-colors"
+                                    disabled={isClearing}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleClearData}
+                                    disabled={clearInput !== 'saya setuju' || isClearing}
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-red-600/30 disabled:text-white/30 text-white rounded-lg text-sm font-medium transition-colors"
+                                >
+                                    {isClearing ? 'Deleting...' : 'Wipe Database'}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Restore Data Modal */}
-            {showRestoreModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-slate-800 border border-green-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl">
-                        <div className="flex items-center gap-3 mb-4 text-green-400">
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                            <h2 className="text-lg font-bold">Restore All Data</h2>
-                        </div>
-                        <p className="text-white/70 text-sm mb-4">
-                            You are about to restore all soft-deleted respondents back to active status. They will reappear in all dashboard tabs.
-                        </p>
-                        <p className="text-white/70 text-sm mb-2">
-                            Please type <span className="font-mono bg-black/30 px-1 py-0.5 rounded text-white font-bold select-all">saya setuju</span> to confirm.
-                        </p>
-                        <input
-                            type="text"
-                            value={restoreInput}
-                            onChange={(e) => setRestoreInput(e.target.value)}
-                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-white/20 focus:outline-none focus:border-green-500/50 mb-6"
-                            placeholder="saya setuju"
-                            autoComplete="off"
-                        />
-                        <div className="flex justify-end gap-3">
-                            <button
-                                onClick={() => {
-                                    setShowRestoreModal(false);
-                                    setRestoreInput('');
-                                }}
-                                className="px-4 py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-colors"
-                                disabled={isRestoring}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleRestoreData}
-                                disabled={restoreInput !== 'saya setuju' || isRestoring}
-                                className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-green-600/30 disabled:text-white/30 text-white rounded-lg text-sm font-medium transition-colors"
-                            >
-                                {isRestoring ? 'Restoring...' : 'Restore Data'}
-                            </button>
+            {
+                showRestoreModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <div className="bg-slate-800 border border-green-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                            <div className="flex items-center gap-3 mb-4 text-green-400">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                <h2 className="text-lg font-bold">Restore All Data</h2>
+                            </div>
+                            <p className="text-white/70 text-sm mb-4">
+                                You are about to restore all soft-deleted respondents back to active status. They will reappear in all dashboard tabs.
+                            </p>
+                            <p className="text-white/70 text-sm mb-2">
+                                Please type <span className="font-mono bg-black/30 px-1 py-0.5 rounded text-white font-bold select-all">saya setuju</span> to confirm.
+                            </p>
+                            <input
+                                type="text"
+                                value={restoreInput}
+                                onChange={(e) => setRestoreInput(e.target.value)}
+                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-white/20 focus:outline-none focus:border-green-500/50 mb-6"
+                                placeholder="saya setuju"
+                                autoComplete="off"
+                            />
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowRestoreModal(false);
+                                        setRestoreInput('');
+                                    }}
+                                    className="px-4 py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-colors"
+                                    disabled={isRestoring}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleRestoreData}
+                                    disabled={restoreInput !== 'saya setuju' || isRestoring}
+                                    className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-green-600/30 disabled:text-white/30 text-white rounded-lg text-sm font-medium transition-colors"
+                                >
+                                    {isRestoring ? 'Restoring...' : 'Restore Data'}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Permanent Delete Data Modal */}
-            {showPermanentDeleteModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-                    <div className="bg-slate-800 border border-red-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl">
-                        <div className="flex items-center gap-3 mb-4 text-red-500">
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            <h2 className="text-lg font-bold">Permanently Delete All Data</h2>
-                        </div>
-                        <p className="text-white/70 text-sm mb-4">
-                            You are about to <strong className="text-red-400">PERMANENTLY DELETE</strong> all respondents in this deletion history from the database. <strong>This action bypasses soft-deletion and cannot be undone.</strong>
-                        </p>
-                        <p className="text-white/70 text-sm mb-2">
-                            Please type <span className="font-mono bg-black/30 px-1 py-0.5 rounded text-white font-bold select-all">saya setuju</span> to confirm.
-                        </p>
-                        <input
-                            type="text"
-                            value={permanentDeleteInput}
-                            onChange={(e) => setPermanentDeleteInput(e.target.value)}
-                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-white/20 focus:outline-none focus:border-red-500/50 mb-6"
-                            placeholder="saya setuju"
-                            autoComplete="off"
-                        />
-                        <div className="flex justify-end gap-3">
-                            <button
-                                onClick={() => {
-                                    setShowPermanentDeleteModal(false);
-                                    setPermanentDeleteInput('');
-                                }}
-                                className="px-4 py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-colors"
-                                disabled={isPermanentDeleting}
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handlePermanentDeleteData}
-                                disabled={permanentDeleteInput !== 'saya setuju' || isPermanentDeleting}
-                                className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-red-600/30 disabled:text-white/30 text-white rounded-lg text-sm font-medium transition-colors"
-                            >
-                                {isPermanentDeleting ? 'Deleting...' : 'Permanently Delete'}
-                            </button>
+            {
+                showPermanentDeleteModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                        <div className="bg-slate-800 border border-red-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                            <div className="flex items-center gap-3 mb-4 text-red-500">
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                <h2 className="text-lg font-bold">Permanently Delete All Data</h2>
+                            </div>
+                            <p className="text-white/70 text-sm mb-4">
+                                You are about to <strong className="text-red-400">PERMANENTLY DELETE</strong> all respondents in this deletion history from the database. <strong>This action bypasses soft-deletion and cannot be undone.</strong>
+                            </p>
+                            <p className="text-white/70 text-sm mb-2">
+                                Please type <span className="font-mono bg-black/30 px-1 py-0.5 rounded text-white font-bold select-all">saya setuju</span> to confirm.
+                            </p>
+                            <input
+                                type="text"
+                                value={permanentDeleteInput}
+                                onChange={(e) => setPermanentDeleteInput(e.target.value)}
+                                className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-white/20 focus:outline-none focus:border-red-500/50 mb-6"
+                                placeholder="saya setuju"
+                                autoComplete="off"
+                            />
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowPermanentDeleteModal(false);
+                                        setPermanentDeleteInput('');
+                                    }}
+                                    className="px-4 py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-colors"
+                                    disabled={isPermanentDeleting}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handlePermanentDeleteData}
+                                    disabled={permanentDeleteInput !== 'saya setuju' || isPermanentDeleting}
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-red-600/30 disabled:text-white/30 text-white rounded-lg text-sm font-medium transition-colors"
+                                >
+                                    {isPermanentDeleting ? 'Deleting...' : 'Permanently Delete'}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </main>
+                )
+            }
+        </main >
     );
 }
