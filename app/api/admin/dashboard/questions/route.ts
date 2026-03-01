@@ -17,10 +17,16 @@ export async function GET(request: NextRequest) {
 
         const supabase = createServerClient();
 
-        // 1. Fetch affiliation/country data for all respondents
+        // 1. Fetch affiliation/country data for all active respondents
         const { data: attrResponses } = await supabase
             .from('survey_responses')
-            .select(`respondent_id, answer_value_json, survey_questions!inner(question_code)`)
+            .select(`
+                respondent_id, 
+                answer_value_json, 
+                survey_questions!inner(question_code),
+                respondents!inner(status)
+            `)
+            .neq('respondents.status', 'deleted')
             .in('survey_questions.question_code', [
                 'affiliation_type', 'closing_affiliation_type', 't23_affiliation_type',
                 'country_base', 'closing_country_base', 't23_country_base'
@@ -42,14 +48,16 @@ export async function GET(request: NextRequest) {
             else if (code.includes('country')) mapObj.country_base = val;
         });
 
-        // 2. Fetch raw responses for the requested phase
+        // 2. Fetch raw responses for the requested phase for active respondents
         const { data: rawResponses } = await supabase
             .from('survey_responses')
             .select(`
                 respondent_id, answer_value_json,
                 survey_questions!inner(question_code, prompt, question_type),
-                survey_phases!inner(phase_code)
+                survey_phases!inner(phase_code),
+                respondents!inner(status)
             `)
+            .neq('respondents.status', 'deleted')
             .eq('survey_phases.phase_code', phaseCode);
 
         // 3. Filter responses based on affiliation and country criteria

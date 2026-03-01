@@ -4,8 +4,8 @@ import { createServerClient } from '@/lib/supabase';
 export const dynamic = 'force-dynamic';
 
 /**
- * POST /api/admin/dashboard/clear-data
- * Clears ALL respondent and survey data from the database.
+ * POST /api/admin/dashboard/restore-data
+ * Restores ALL soft-deleted survey data.
  * Protected by Admin Authentication session.
  */
 export async function POST(request: NextRequest) {
@@ -15,7 +15,6 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Step 2: Ensure it's a POST with a valid intent payload
         const body = await request.json();
         if (body.intent !== 'saya setuju') {
             return NextResponse.json({ success: false, error: 'Invalid confirmation string' }, { status: 400 });
@@ -23,21 +22,20 @@ export async function POST(request: NextRequest) {
 
         const supabase = createServerClient();
 
-        // Step 3: Execute soft wipe by setting status to 'deleted'
+        // Restore soft-deleted respondents
         const { error: deletionError } = await supabase
             .from('respondents')
-            .update({ status: 'deleted' })
-            .neq('id', '00000000-0000-0000-0000-000000000000')
-            .neq('status', 'deleted');
+            .update({ status: 'active' })
+            .eq('status', 'deleted');
 
         if (deletionError) {
-            console.error('[clear-data] delete fail:', deletionError);
-            return NextResponse.json({ success: false, error: 'Failed to delete records.' }, { status: 500 });
+            console.error('[restore-data] restore fail:', deletionError);
+            return NextResponse.json({ success: false, error: 'Failed to restore records.' }, { status: 500 });
         }
 
-        return NextResponse.json({ success: true, message: 'All survey data has been permanently cleared.' });
+        return NextResponse.json({ success: true, message: 'All previously deleted survey data has been restored.' });
     } catch (err) {
-        console.error('[/api/admin/dashboard/clear-data]', err);
+        console.error('[/api/admin/dashboard/restore-data]', err);
         return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
     }
 }

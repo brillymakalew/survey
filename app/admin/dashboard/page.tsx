@@ -9,7 +9,7 @@ import {
 
 const CHART_COLORS = ['#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#ef4444'];
 
-type TabId = 'overview' | 'funnel' | 'phases' | 'crosstabs' | 'responses' | 'questions' | 'exports';
+type TabId = 'overview' | 'funnel' | 'phases' | 'crosstabs' | 'responses' | 'questions' | 'exports' | 'deleted';
 
 interface Respondent {
     id: string; full_name: string; phone_normalized: string;
@@ -52,6 +52,8 @@ export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState<TabId>('overview');
     const [loading, setLoading] = useState(true);
     const [overview, setOverview] = useState<OverviewData | null>(null);
+
+    // Normal responses state
     const [respondents, setRespondents] = useState<Respondent[]>([]);
     const [pagination, setPagination] = useState<Pagination>({ page: 1, total_pages: 1, total: 0 });
     const [search, setSearch] = useState('');
@@ -59,13 +61,29 @@ export default function AdminDashboard() {
     const [affiliationFilter, setAffiliationFilter] = useState('');
     const [countryFilter, setCountryFilter] = useState('');
 
+    // Deleted responses state
+    const [deletedRespondents, setDeletedRespondents] = useState<Respondent[]>([]);
+    const [deletedPagination, setDeletedPagination] = useState<Pagination>({ page: 1, total_pages: 1, total: 0 });
+    const [deletedSearch, setDeletedSearch] = useState('');
+    const [deletedPhaseFilter, setDeletedPhaseFilter] = useState('');
+
     const [questionsData, setQuestionsData] = useState<QuestionData | null>(null);
     const [qLoading, setQLoading] = useState(false);
 
-    // New State for Clear Data Feature
+    // New State for Clear Data Feature (Soft Delete)
     const [showClearModal, setShowClearModal] = useState(false);
     const [clearInput, setClearInput] = useState('');
     const [isClearing, setIsClearing] = useState(false);
+
+    // New State for Restore Data Feature
+    const [showRestoreModal, setShowRestoreModal] = useState(false);
+    const [restoreInput, setRestoreInput] = useState('');
+    const [isRestoring, setIsRestoring] = useState(false);
+
+    // New State for Permanent Delete Feature
+    const [showPermanentDeleteModal, setShowPermanentDeleteModal] = useState(false);
+    const [permanentDeleteInput, setPermanentDeleteInput] = useState('');
+    const [isPermanentDeleting, setIsPermanentDeleting] = useState(false);
 
     // New State for Full Screen Chart
     const [fullScreenChart, setFullScreenChart] = useState<string | null>(null);
@@ -111,6 +129,27 @@ export default function AdminDashboard() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab, pagination.page, search, phaseFilter]);
 
+    // Fetch deleted respondents list
+    useEffect(() => {
+        if (activeTab !== 'deleted') return;
+        (async () => {
+            const params = new URLSearchParams({
+                page: String(deletedPagination.page),
+                page_size: '20',
+                ...(deletedSearch && { search: deletedSearch }),
+                ...(deletedPhaseFilter && { phase: deletedPhaseFilter }),
+            });
+            const res = await fetch(`/api/admin/dashboard/deleted-respondents?${params}`);
+            if (res.status === 401) { router.push('/admin/login'); return; }
+            const data = await res.json();
+            if (data.success) {
+                setDeletedRespondents(data.respondents);
+                setDeletedPagination({ page: data.page, total_pages: data.total_pages, total: data.total });
+            }
+        })();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeTab, deletedPagination.page, deletedSearch, deletedPhaseFilter]);
+
     // Fetch questions data
     useEffect(() => {
         if (activeTab !== 'questions') return;
@@ -135,7 +174,8 @@ export default function AdminDashboard() {
         })();
     }, [activeTab, phaseFilter, affiliationFilter, countryFilter, router]);
 
-    // Action: Clear Data
+
+    // Action: Clear Data (Soft Delete)
     async function handleClearData() {
         if (clearInput !== 'saya setuju') return;
         setIsClearing(true);
@@ -158,6 +198,56 @@ export default function AdminDashboard() {
             alert('Network error while clearing data.');
         }
         setIsClearing(false);
+    }
+
+    // Action: Restore Data
+    async function handleRestoreData() {
+        if (restoreInput !== 'saya setuju') return;
+        setIsRestoring(true);
+        try {
+            const res = await fetch('/api/admin/dashboard/restore-data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ intent: restoreInput }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setShowRestoreModal(false);
+                setRestoreInput('');
+                // Refresh cleanly
+                window.location.reload();
+            } else {
+                alert(data.error || 'Failed to restore data.');
+            }
+        } catch {
+            alert('Network error while restoring data.');
+        }
+        setIsRestoring(false);
+    }
+
+    // Action: Permanent Delete Data
+    async function handlePermanentDeleteData() {
+        if (permanentDeleteInput !== 'saya setuju') return;
+        setIsPermanentDeleting(true);
+        try {
+            const res = await fetch('/api/admin/dashboard/permanent-delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ intent: permanentDeleteInput }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                setShowPermanentDeleteModal(false);
+                setPermanentDeleteInput('');
+                // Refresh cleanly
+                window.location.reload();
+            } else {
+                alert(data.error || 'Failed to permanently delete data.');
+            }
+        } catch {
+            alert('Network error while permanently deleting data.');
+        }
+        setIsPermanentDeleting(false);
     }
 
     async function handleLogout() {
@@ -220,6 +310,7 @@ export default function AdminDashboard() {
         { id: 'responses', label: 'Responses' },
         { id: 'questions', label: 'Questions' },
         { id: 'exports', label: 'Exports' },
+        { id: 'deleted', label: 'Deletion History' },
     ];
 
     return (
@@ -722,6 +813,99 @@ export default function AdminDashboard() {
                     </div>
                 )}
 
+                {/* ── DELETED RESPONDENTS ──────────────────────────── */}
+                {activeTab === 'deleted' && (
+                    <div className="space-y-5">
+                        <div className="flex flex-wrap gap-4 items-center justify-between mb-4">
+                            <div className="flex flex-wrap gap-3 items-center">
+                                <input
+                                    type="text"
+                                    placeholder="Search deleted by name…"
+                                    value={deletedSearch}
+                                    onChange={e => { setDeletedSearch(e.target.value); setDeletedPagination(p => ({ ...p, page: 1 })); }}
+                                    className="bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white text-sm
+                                        placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-400/40 w-56"
+                                />
+                                <select
+                                    value={deletedPhaseFilter}
+                                    onChange={e => { setDeletedPhaseFilter(e.target.value); setDeletedPagination(p => ({ ...p, page: 1 })); }}
+                                    className="bg-slate-800 border border-white/20 rounded-xl px-4 py-2 text-white text-sm focus:outline-none"
+                                >
+                                    <option value="">All Panels</option>
+                                    {PHASES.map(p => <option key={p} value={p}>{p.replace('phase_', 'Panel ').replace('closing', 'Closing')}</option>)}
+                                </select>
+                                <span className="text-white/30 text-xs ml-2">{deletedPagination.total} total deleted</span>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setShowRestoreModal(true)}
+                                    className="px-4 py-2 bg-green-600/20 text-green-400 hover:bg-green-600/30 border border-green-500/30 rounded-lg text-sm font-medium transition-colors"
+                                >
+                                    Restore All Data
+                                </button>
+                                <button
+                                    onClick={() => setShowPermanentDeleteModal(true)}
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-colors"
+                                >
+                                    Permanently Delete All
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+                            <table className="w-full text-sm">
+                                <thead className="border-b border-white/10">
+                                    <tr className="text-white/40 text-left">
+                                        <th className="px-5 py-3">Name</th>
+                                        <th className="px-5 py-3 hidden md:table-cell">Phone</th>
+                                        <th className="px-5 py-3">Panel</th>
+                                        <th className="px-5 py-3 hidden md:table-cell">Registered</th>
+                                        <th className="px-5 py-3 hidden md:table-cell">Last Active</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {deletedRespondents.map(r => (
+                                        <tr key={r.id} className="border-b border-white/5 hover:bg-white/5 opacity-60">
+                                            <td className="px-5 py-3 text-white">{r.full_name}</td>
+                                            <td className="px-5 py-3 text-white/40 hidden md:table-cell">{r.phone_normalized}</td>
+                                            <td className="px-5 py-3 text-white/60 capitalize">{r.current_phase.replace('phase_', 'Panel ').replace('closing', 'Closing')}</td>
+                                            <td className="px-5 py-3 text-white/40 hidden md:table-cell">
+                                                {new Date(r.created_at).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-5 py-3 text-white/40 hidden md:table-cell">
+                                                {r.last_seen_at ? new Date(r.last_seen_at).toLocaleDateString() : '—'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    {deletedRespondents.length === 0 && (
+                                        <tr><td colSpan={5} className="px-5 py-8 text-center text-white/30">No deleted respondents found.</td></tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Pagination */}
+                        {deletedPagination.total_pages > 1 && (
+                            <div className="flex items-center justify-center gap-2">
+                                <button
+                                    onClick={() => setDeletedPagination(p => ({ ...p, page: p.page - 1 }))}
+                                    disabled={deletedPagination.page === 1}
+                                    className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white/60
+                    disabled:opacity-30 hover:bg-white/10 transition-all"
+                                >← Prev</button>
+                                <span className="text-white/30 text-sm">Page {deletedPagination.page} / {deletedPagination.total_pages}</span>
+                                <button
+                                    onClick={() => setDeletedPagination(p => ({ ...p, page: p.page + 1 }))}
+                                    disabled={deletedPagination.page === deletedPagination.total_pages}
+                                    className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white/60
+                    disabled:opacity-30 hover:bg-white/10 transition-all"
+                                >Next →</button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 {/* ── EXPORTS & IMPORTS ────────────────────────── */}
                 {activeTab === 'exports' && (
                     <div className="grid md:grid-cols-2 gap-8 max-w-4xl">
@@ -937,6 +1121,100 @@ export default function AdminDashboard() {
                                 className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-red-600/30 disabled:text-white/30 text-white rounded-lg text-sm font-medium transition-colors"
                             >
                                 {isClearing ? 'Deleting...' : 'Wipe Database'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Restore Data Modal */}
+            {showRestoreModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-slate-800 border border-green-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                        <div className="flex items-center gap-3 mb-4 text-green-400">
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            <h2 className="text-lg font-bold">Restore All Data</h2>
+                        </div>
+                        <p className="text-white/70 text-sm mb-4">
+                            You are about to restore all soft-deleted respondents back to active status. They will reappear in all dashboard tabs.
+                        </p>
+                        <p className="text-white/70 text-sm mb-2">
+                            Please type <span className="font-mono bg-black/30 px-1 py-0.5 rounded text-white font-bold select-all">saya setuju</span> to confirm.
+                        </p>
+                        <input
+                            type="text"
+                            value={restoreInput}
+                            onChange={(e) => setRestoreInput(e.target.value)}
+                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-white/20 focus:outline-none focus:border-green-500/50 mb-6"
+                            placeholder="saya setuju"
+                            autoComplete="off"
+                        />
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowRestoreModal(false);
+                                    setRestoreInput('');
+                                }}
+                                className="px-4 py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-colors"
+                                disabled={isRestoring}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleRestoreData}
+                                disabled={restoreInput !== 'saya setuju' || isRestoring}
+                                className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-green-600/30 disabled:text-white/30 text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                                {isRestoring ? 'Restoring...' : 'Restore Data'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Permanent Delete Data Modal */}
+            {showPermanentDeleteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-slate-800 border border-red-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                        <div className="flex items-center gap-3 mb-4 text-red-500">
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            <h2 className="text-lg font-bold">Permanently Delete All Data</h2>
+                        </div>
+                        <p className="text-white/70 text-sm mb-4">
+                            You are about to <strong className="text-red-400">PERMANENTLY DELETE</strong> all respondents in this deletion history from the database. <strong>This action bypasses soft-deletion and cannot be undone.</strong>
+                        </p>
+                        <p className="text-white/70 text-sm mb-2">
+                            Please type <span className="font-mono bg-black/30 px-1 py-0.5 rounded text-white font-bold select-all">saya setuju</span> to confirm.
+                        </p>
+                        <input
+                            type="text"
+                            value={permanentDeleteInput}
+                            onChange={(e) => setPermanentDeleteInput(e.target.value)}
+                            className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white placeholder-white/20 focus:outline-none focus:border-red-500/50 mb-6"
+                            placeholder="saya setuju"
+                            autoComplete="off"
+                        />
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowPermanentDeleteModal(false);
+                                    setPermanentDeleteInput('');
+                                }}
+                                className="px-4 py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-colors"
+                                disabled={isPermanentDeleting}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handlePermanentDeleteData}
+                                disabled={permanentDeleteInput !== 'saya setuju' || isPermanentDeleting}
+                                className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-red-600/30 disabled:text-white/30 text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                                {isPermanentDeleting ? 'Deleting...' : 'Permanently Delete'}
                             </button>
                         </div>
                     </div>

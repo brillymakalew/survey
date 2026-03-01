@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
             const { data: rows } = await supabase
                 .from('respondents')
                 .select('id, full_name, phone_normalized, current_phase, status, created_at, last_seen_at')
+                .neq('status', 'deleted')
                 .order('created_at', { ascending: false });
             data = (rows || []) as Record<string, unknown>[];
             filename = `respondents_${new Date().toISOString().slice(0, 10)}`;
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
                 .from('survey_responses')
                 .select(`
           respondent_id,
-          respondents(full_name, phone_normalized),
+          respondents!inner(full_name, phone_normalized, status),
           survey_questions(question_code, prompt, question_type),
           survey_phases(phase_code),
           answer_value_json,
@@ -39,6 +40,7 @@ export async function GET(request: NextRequest) {
           is_finalized,
           answered_at
         `)
+                .neq('respondents.status', 'deleted')
                 .order('answered_at', { ascending: false });
 
             data = (rows || []).map((r: Record<string, unknown>) => {

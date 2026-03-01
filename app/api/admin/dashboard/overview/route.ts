@@ -16,19 +16,28 @@ export async function GET(request: NextRequest) {
         const endDate = searchParams.get('end_date');
 
         // Instead of the broken view, compute funnel in memory
+        // Only count active respondents for total
         const { count: totalRespondents } = await supabase
             .from('respondents')
-            .select('*', { count: 'exact', head: true });
+            .select('*', { count: 'exact', head: true })
+            .neq('status', 'deleted');
+
+        // Fetch active respondent IDs
+        const { data: activeRespondents } = await supabase
+            .from('respondents')
+            .select('id')
+            .neq('status', 'deleted');
+        const activeRespondentIds = new Set((activeRespondents || []).map(r => r.id));
 
         const { data: allPhases } = await supabase.from('survey_phases').select('id, phase_code');
-        const { data: allProgress } = await supabase.from('phase_progress').select('phase_id, status');
+        const { data: allProgress } = await supabase.from('phase_progress').select('phase_id, status, respondent_id');
 
         const phaseIdMap = (allPhases || []).reduce((acc, p) => ({ ...acc, [p.phase_code]: p.id }), {} as Record<string, string>);
 
         const countProgress = (phaseCode: string, statuses: string[]) => {
             const phaseId = phaseIdMap[phaseCode];
             if (!phaseId || !allProgress) return 0;
-            return allProgress.filter(p => p.phase_id === phaseId && statuses.includes(p.status)).length;
+            return allProgress.filter(p => p.phase_id === phaseId && statuses.includes(p.status) && activeRespondentIds.has(p.respondent_id)).length;
         };
 
         const funnel = {
@@ -40,12 +49,10 @@ export async function GET(request: NextRequest) {
             closing_completed: countProgress('closing', ['completed']),
         };
 
-        // Phase completion stats
+        // Phase completion stats (now filtered by SQL view)
         const { data: phaseStats } = await supabase
             .from('vw_phase_completion_stats')
             .select('*');
-
-
 
         // Dynamically compute affiliation and collaboration instead of using broken views
         const { data: qAffiliation } = await supabase.from('survey_questions').select('id, question_code').in('question_code', ['affiliation_type', 'country_base']);
@@ -54,11 +61,12 @@ export async function GET(request: NextRequest) {
         const affilMap = (qAffiliation || []).reduce((acc, q) => ({ ...acc, [q.question_code]: q.id }), {} as Record<string, string>);
         const intentId = qIntent?.[0]?.id;
 
-        const { data: responses } = await supabase.from('survey_responses').select('respondent_id, question_id, answer_value_json');
+        const { data: responses } = await supabase.from('survey_responses')
+            .select('respondent_id, question_id, answer_value_json');
 
         const respData = new Map<string, { affiliation?: string, country_base?: string, intent?: string }>();
 
-        responses?.forEach(r => {
+        responses?.filter(r => activeRespondentIds.has(r.respondent_id)).forEach(r => {
             const rid = r.respondent_id;
             if (!respData.has(rid)) respData.set(rid, {});
             const item = respData.get(rid)!;
@@ -99,6 +107,7 @@ export async function GET(request: NextRequest) {
         let recentQuery = supabase
             .from('respondents')
             .select('id, full_name, current_phase, status, created_at, last_seen_at')
+            .neq('status', 'deleted')
             .order('created_at', { ascending: false })
             .limit(10);
 
