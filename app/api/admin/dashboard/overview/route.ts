@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
             .neq('status', 'deleted');
         const activeRespondentIds = new Set((activeRespondents || []).map(r => r.id));
 
-        const { data: allPhases } = await supabase.from('survey_phases').select('id, phase_code');
-        const { data: allProgress } = await supabase.from('phase_progress').select('phase_id, status, respondent_id');
+        const { data: allPhases } = await supabase.from('survey_phases').select('id, phase_code, phase_name, sort_order').order('sort_order');
+        const { data: allProgress } = await supabase.from('phase_progress').select('phase_id, status, respondent_id, started_at, completed_at');
 
         const phaseIdMap = (allPhases || []).reduce((acc, p) => ({ ...acc, [p.phase_code]: p.id }), {} as Record<string, string>);
 
@@ -49,10 +49,33 @@ export async function GET(request: NextRequest) {
             closing_completed: countProgress('closing', ['completed']),
         };
 
-        // Phase completion stats (now filtered by SQL view)
-        const { data: phaseStats } = await supabase
-            .from('vw_phase_completion_stats')
-            .select('*');
+        // Compute phaseStats dynamically in memory instead of relying on the SQL view
+        const phaseStats = (allPhases || []).map(p => {
+            const progress = (allProgress || []).filter(pr => pr.phase_id === p.id && activeRespondentIds.has(pr.respondent_id));
+            const total_with_progress = progress.length;
+            const completed = progress.filter(pr => pr.status === 'completed');
+            const completed_count = completed.length;
+            const completion_rate_pct = total_with_progress > 0 ? Number(((completed_count / total_with_progress) * 100).toFixed(1)) : 0;
+
+            let avg_completion_minutes = 0;
+            const completedWithTime = completed.filter(pr => pr.started_at && pr.completed_at);
+            if (completedWithTime.length > 0) {
+                const totalMins = completedWithTime.reduce((sum, pr) => {
+                    const diff = new Date(pr.completed_at).getTime() - new Date(pr.started_at).getTime();
+                    return sum + (diff / 60000);
+                }, 0);
+                avg_completion_minutes = Number((totalMins / completedWithTime.length).toFixed(1));
+            }
+
+            return {
+                phase_code: p.phase_code,
+                phase_name: p.phase_name,
+                total_with_progress,
+                completed_count,
+                completion_rate_pct,
+                avg_completion_minutes
+            };
+        });
 
         // Dynamically compute affiliation and collaboration instead of using broken views
         const { data: qAffiliation } = await supabase.from('survey_questions').select('id, question_code').in('question_code', ['affiliation_type', 'country_base']);
