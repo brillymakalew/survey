@@ -132,8 +132,13 @@ Focus on:
 1. Deeply analyzing the textual and categorical responses to pull out key themes, recurring sentiments, and significant insights.
 2. Identifying actionable patterns and what these answers mean for the organization.
 3. Suggesting concrete follow-up actions that can be done collaboratively by all participants and other stakeholders based strictly on these findings.
+4. Providing specific points of view (POV) and quick, actionable steps for three distinct groups:
+   - **Academics**: What quick steps they must take based on the review results to make research translation more effective.
+   - **Industry**: What quick steps they must take based on the review results to make research translation more effective.
+   - **Government**: What quick steps they must take based on the review results to make research translation more effective.
 
 Output the summary in clean Markdown format with professional headers, bullet points, and bold text for emphasis.
+All output MUST be in English.
 `;
 
         const response = await openai.chat.completions.create({
