@@ -78,10 +78,18 @@ export async function POST(request: NextRequest) {
 
         const newCurrentPhase = nextPhase?.phase_code ?? 'completed';
 
-        // Update respondent current_phase
+        // Update respondent current_phase and conditionally mark as completed
+        const rUpdate: Record<string, unknown> = {
+            current_phase: newCurrentPhase,
+            updated_at: new Date().toISOString()
+        };
+        if (!nextPhase) {
+            rUpdate.status = 'completed';
+        }
+
         await supabase
             .from('respondents')
-            .update({ current_phase: newCurrentPhase, updated_at: new Date().toISOString() })
+            .update(rUpdate)
             .eq('id', respondentId);
 
         if (!nextPhase) {

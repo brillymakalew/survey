@@ -42,6 +42,17 @@ export async function POST(request: NextRequest) {
             // ── RETURNING RESPONDENT ──────────────────────────────────
             respondentId = existing.id;
 
+            if (existing.status === 'completed') {
+                return NextResponse.json({
+                    success: true,
+                    is_new: false,
+                    respondent_id: respondentId,
+                    session_token: 'completed_session',
+                    resume_phase: 'done',
+                    resume_step: null,
+                });
+            }
+
             // Update last seen & name (keep latest non-empty input per PRD §10.1)
             await supabase
                 .from('respondents')

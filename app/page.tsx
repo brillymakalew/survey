@@ -39,7 +39,7 @@ export function HomeContent() {
                 const allCompleted = sortedPhases.length > 0 && sortedPhases.every(
                     (p: { progress?: { status: string } }) => p.progress?.status === 'completed'
                 );
-                if (allCompleted) {
+                if (allCompleted || data.respondent?.status === 'completed') {
                     router.replace('/done');
                     return;
                 }
@@ -102,10 +102,10 @@ export function HomeContent() {
             }
 
             // Navigate to resume point or specific panel
-            if (returnTo) {
-                router.push(`/${returnTo}`);
-            } else if (data.resume_phase === 'done') {
+            if (data.resume_phase === 'done') {
                 router.push('/done');
+            } else if (returnTo) {
+                router.push(`/${returnTo}`);
             } else {
                 router.push(`/${data.resume_phase}`);
             }

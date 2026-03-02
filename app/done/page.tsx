@@ -1,3 +1,5 @@
+'use client';
+
 export default function SurveyDone() {
     return (
         <main className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-900 flex items-center justify-center p-4">
@@ -35,6 +37,22 @@ export default function SurveyDone() {
                 <p className="text-white/20 text-xs">
                     You may safely close this window. Your progress is saved and will not be lost.
                 </p>
+
+                {/* Logout Button */}
+                <div className="mt-8 text-center pb-8">
+                    <button
+                        onClick={() => {
+                            if (typeof window !== 'undefined') {
+                                localStorage.removeItem('respondent_session_token');
+                                localStorage.removeItem('respondent_id');
+                                window.location.href = '/';
+                            }
+                        }}
+                        className="text-white/20 hover:text-white/40 text-[10px] transition-colors uppercase tracking-wider"
+                    >
+                        Log out & clear session
+                    </button>
+                </div>
             </div>
         </main>
     );

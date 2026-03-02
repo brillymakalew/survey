@@ -71,6 +71,22 @@ function BetweenContent() {
                 <p className="text-white/20 text-xs">
                     You may safely close this page. Your progress will be waiting when you open the next link.
                 </p>
+
+                {/* Logout Button */}
+                <div className="mt-8 text-center pb-8">
+                    <button
+                        onClick={() => {
+                            if (typeof window !== 'undefined') {
+                                localStorage.removeItem('respondent_session_token');
+                                localStorage.removeItem('respondent_id');
+                                window.location.href = '/';
+                            }
+                        }}
+                        className="text-white/20 hover:text-white/40 text-[10px] transition-colors uppercase tracking-wider"
+                    >
+                        Log out & clear session
+                    </button>
+                </div>
             </div>
         </main>
     );

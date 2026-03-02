@@ -80,6 +80,12 @@ export default function PanelPage() {
                 }
 
                 if (resumeData.success && resumeData.phases) {
+                    // Hard lockout for users who have completely finished the entire survey
+                    if (resumeData.respondent?.status === 'completed') {
+                        router.replace('/done');
+                        return;
+                    }
+
                     setPanels(resumeData.phases);
                     const currentPanel = resumeData.phases.find((p: PhaseInfo) => p.phase_code === panelCode);
                     if (!currentPanel) { setPanelError('Panel not found.'); setLoading(false); return; }
@@ -92,18 +98,30 @@ export default function PanelPage() {
                         setWelcomed(true);
                     }
 
-                    // Restore saved answers
+                    // Restore saved answers from server
+                    let restored: Record<string, unknown> = {};
                     if (resumeData.saved_responses) {
                         const idToCode = Object.fromEntries(
                             (qData.questions as Question[]).map((q: Question) => [q.id, q.question_code])
                         );
-                        const restored: Record<string, unknown> = {};
                         for (const [qId, val] of Object.entries(resumeData.saved_responses)) {
                             const code = idToCode[qId];
                             if (code) restored[code] = val;
                         }
-                        setAnswers(restored);
                     }
+
+                    // Merge with any un-saved local draft (VAL-04 State retention on refresh)
+                    try {
+                        const draftStr = localStorage.getItem(`survey_draft_${panelCode}`);
+                        if (draftStr) {
+                            const localDraft = JSON.parse(draftStr);
+                            if (localDraft && typeof localDraft === 'object') {
+                                restored = { ...restored, ...localDraft };
+                            }
+                        }
+                    } catch { /* ignore parse errors */ }
+
+                    setAnswers(restored);
                 }
                 setQuestions(qData.questions);
             } catch {
@@ -171,6 +189,10 @@ export default function PanelPage() {
     function handleAnswerChange(code: string, value: unknown) {
         const next = { ...answers, [code]: value };
         setAnswers(next);
+        // Save to local cache immediately to prevent wipe on refresh (VAL-04)
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(`survey_draft_${panelCode}`, JSON.stringify(next));
+        }
         debouncedSave(next);
     }
 
@@ -239,6 +261,12 @@ export default function PanelPage() {
         const data = await res.json();
         setSubmitting(false);
         if (!res.ok || !data.success) { setSubmitError(data.error || 'Submission failed. Please try again.'); return; }
+
+        // Clear local draft upon success
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem(`survey_draft_${panelCode}`);
+        }
+
         if (data.next_phase === 'done') {
             router.push('/done');
         } else {
@@ -325,6 +353,21 @@ export default function PanelPage() {
                     <p className="text-center text-white/20 text-xs mt-6">
                         Your answers are stored securely and used for research analysis only.
                     </p>
+
+                    <div className="mt-6 text-center pb-2">
+                        <button
+                            onClick={() => {
+                                if (typeof window !== 'undefined') {
+                                    localStorage.removeItem('respondent_session_token');
+                                    localStorage.removeItem('respondent_id');
+                                    window.location.href = '/';
+                                }
+                            }}
+                            className="text-white/20 hover:text-white/40 text-[10px] transition-colors uppercase tracking-wider"
+                        >
+                            Log out & clear session
+                        </button>
+                    </div>
                 </div>
             </main>
         );
@@ -382,6 +425,23 @@ export default function PanelPage() {
                             {submitError}
                         </div>
                     )}
+                </div>
+
+                {/* Logout Button */}
+                <div className="mt-8 text-center">
+                    <button
+                        onClick={() => {
+                            if (typeof window !== 'undefined') {
+                                localStorage.removeItem('respondent_session_token');
+                                localStorage.removeItem('respondent_id');
+                                localStorage.removeItem(`survey_draft_${panelCode}`);
+                                window.location.href = '/';
+                            }
+                        }}
+                        className="text-white/20 hover:text-white/40 text-[10px] transition-colors uppercase tracking-wider"
+                    >
+                        Log out & clear session
+                    </button>
                 </div>
             </div>
 

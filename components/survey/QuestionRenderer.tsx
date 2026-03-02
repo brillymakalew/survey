@@ -172,6 +172,7 @@ export default function QuestionRenderer({ question, value, onChange, allAnswers
             {question.question_type === 'short_text' && (
                 <input
                     type="text"
+                    maxLength={250}
                     value={typeof value === 'string' ? value : ''}
                     onChange={e => onChange(e.target.value)}
                     placeholder="Type your answer…"
@@ -182,6 +183,7 @@ export default function QuestionRenderer({ question, value, onChange, allAnswers
             {/* Long Text */}
             {question.question_type === 'long_text' && (
                 <textarea
+                    maxLength={2000}
                     value={typeof value === 'string' ? value : ''}
                     onChange={e => onChange(e.target.value)}
                     placeholder="Type your answer…"
