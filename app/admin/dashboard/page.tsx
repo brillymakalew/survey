@@ -440,16 +440,24 @@ export default function AdminDashboard() {
         <main className="min-h-screen bg-slate-900 text-white pb-24">
             {/* Header */}
             <header className="border-b border-white/10 bg-slate-900/80 backdrop-blur sticky top-0 z-20">
-                <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-                    <h1 className="font-bold text-lg">Survey Admin</h1>
+                <div className="max-w-7xl mx-auto px-6 pt-6 pb-4 flex items-center justify-end relative">
+                    {/* Centered Logos */}
+                    <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-5 mt-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/logo/logo-rtt-2.png" alt="RTT" className="h-9 md:h-12 w-auto object-contain" />
+                        <div className="h-7 md:h-10 w-[1px] bg-white/20"></div>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src="/logo/binus_heal.png" alt="Heal" className="h-9 md:h-12 w-auto object-contain" />
+                    </div>
+
                     <button
                         onClick={handleLogout}
-                        className="text-white/40 hover:text-white text-sm transition-colors"
+                        className="text-white/40 hover:text-white text-sm transition-colors relative z-10"
                     >
                         Sign Out
                     </button>
                 </div>
-                <div className="max-w-7xl mx-auto px-6 flex gap-1 overflow-x-auto">
+                <div className="max-w-7xl mx-auto px-6 flex gap-1 overflow-x-auto mb-1">
                     {tabs.map(t => (
                         <button
                             key={t.id}
