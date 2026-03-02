@@ -1,13 +1,12 @@
 import type { NextConfig } from "next";
 
-const nextConfig = {
+const nextConfig: NextConfig = {
   output: "standalone",
-  eslint: {
-    ignoreDuringBuilds: true,
+  experimental: {
+    cpus: 1,
+    workerThreads: false,
+    memoryBasedWorkersCount: true,
   },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-} as NextConfig;
+};
 
 export default nextConfig;
