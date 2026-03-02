@@ -227,7 +227,7 @@ from survey_phases sp,
 
   ('top_priorities',
    'reflection',
-   'What are your top 3 priorities to build equitable UK-Indonesia research translation pathways?',
+   'What are your top 3 priorities to build equitable Indonesia-UK research translation pathways?',
    'Select exactly 3 items.',
    'multi_select',
    '["Joint funding mechanisms","Talent mobility programs","IP sharing frameworks","Regulatory harmonization","Community engagement","Technology transfer offices","Digital collaboration platforms","Knowledge exchange programs","Other"]',
