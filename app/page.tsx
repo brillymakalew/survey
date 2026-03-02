@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import LogoOverlay from '@/components/survey/LogoOverlay';
 
 /**
  * Landing Page — PRD §5.3, §6.1, §12
@@ -205,6 +206,8 @@ export function HomeContent() {
                         By continuing you consent to this use. Data is stored securely and not shared with third parties.
                     </p>
                 </div>
+
+                <LogoOverlay />
             </div>
         </main>
     );

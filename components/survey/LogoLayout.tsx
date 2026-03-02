@@ -12,15 +12,6 @@ export default function LogoOverlay() {
 
     return (
         <div className="flex flex-col min-h-screen">
-            <header className="w-full pt-4 md:pt-6 pl-4 md:pl-8">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                    src="/logo/british_council.png"
-                    alt="British Council"
-                    className="h-8 md:h-12 w-auto object-contain drop-shadow-lg"
-                />
-            </header>
-
             <main className="flex-grow">
                 <div id="survey-content-slot" />
             </main>

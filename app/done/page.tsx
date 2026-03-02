@@ -1,5 +1,7 @@
 'use client';
 
+import LogoOverlay from '@/components/survey/LogoOverlay';
+
 export default function SurveyDone() {
     return (
         <main className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-900 flex items-center justify-center p-4">
@@ -34,9 +36,11 @@ export default function SurveyDone() {
                     </ul>
                 </div>
 
-                <p className="text-white/20 text-xs">
+                <p className="text-white/20 text-xs mb-8">
                     You may safely close this window. Your progress is saved and will not be lost.
                 </p>
+
+                <LogoOverlay />
 
                 {/* Logout Button */}
                 <div className="mt-8 text-center pb-8">

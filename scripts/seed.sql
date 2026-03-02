@@ -7,9 +7,9 @@
 -- Survey Panels  (phase_code now uses panel_1/panel_2/panel_3/closing)
 -- ============================================================
 insert into survey_phases (phase_code, phase_name, sort_order, is_active) values
-  ('panel_1', 'Panel 1: Ideation (T0-T1)',             1, true),
-  ('panel_2', 'Panel 2: Prototyping-Trials (T2-T3)',   2, true),
-  ('panel_3', 'Panel 3: Scale-Up (T4-T5)',             3, true),
+  ('panel_1', 'Panel 1: Ideation',             1, true),
+  ('panel_2', 'Panel 2: Prototyping-Trials',   2, true),
+  ('panel_3', 'Panel 3: Scale-Up',             3, true),
   ('closing', 'Closing Survey: Questionnaire Action',  4, true)
 on conflict (phase_code) do nothing;
 

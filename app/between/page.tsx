@@ -2,11 +2,12 @@
 
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
+import LogoOverlay from '@/components/survey/LogoOverlay';
 
 const PANEL_LABELS: Record<string, string> = {
-    panel_1: 'Panel 1: Ideation (T0-T1)',
-    panel_2: 'Panel 2: Prototyping-Trials (T2-T3)',
-    panel_3: 'Panel 3: Scale-Up (T4-T5)',
+    panel_1: 'Panel 1: Ideation',
+    panel_2: 'Panel 2: Prototyping-Trials',
+    panel_3: 'Panel 3: Scale-Up',
 };
 
 function BetweenContent() {
@@ -68,25 +69,11 @@ function BetweenContent() {
                     </div>
                 </div>
 
-                <p className="text-white/20 text-xs">
+                <p className="text-white/20 text-xs mb-8">
                     You may safely close this page. Your progress will be waiting when you open the next link.
                 </p>
 
-                {/* Logout Button */}
-                <div className="mt-8 text-center pb-8">
-                    <button
-                        onClick={() => {
-                            if (typeof window !== 'undefined') {
-                                localStorage.removeItem('respondent_session_token');
-                                localStorage.removeItem('respondent_id');
-                                window.location.href = '/';
-                            }
-                        }}
-                        className="text-white/20 hover:text-white/40 text-[10px] transition-colors uppercase tracking-wider"
-                    >
-                        Log out & clear session
-                    </button>
-                </div>
+                <LogoOverlay />
             </div>
         </main>
     );

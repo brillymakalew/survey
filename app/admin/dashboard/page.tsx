@@ -97,6 +97,7 @@ export default function AdminDashboard() {
     // New State for AI Summarization
     const [aiSummary, setAiSummary] = useState('');
     const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+    const [isExportingPDF, setIsExportingPDF] = useState(false);
 
     // Fetch AI summary from DB on mount
     useEffect(() => {
@@ -322,6 +323,88 @@ export default function AdminDashboard() {
         setIsGeneratingSummary(false);
     };
 
+    const handleExportPDF = async () => {
+        setIsExportingPDF(true);
+        try {
+            // Dynamically import jsPDF to avoid SSR issues
+            const { jsPDF } = await import('jspdf');
+            const doc = new jsPDF();
+
+            const lines = aiSummary.split('\n');
+            let y = 20;
+            const pageHeight = doc.internal.pageSize.getHeight();
+            const margin = 15;
+            const maxWidth = 180;
+
+            // Document Title
+            doc.setFontSize(18);
+            doc.setFont("helvetica", "bold");
+            doc.text("Survey AI Insights & Findings", margin, y);
+            y += 12;
+
+            // Render lines
+            lines.forEach(line => {
+                if (line.trim() === '') {
+                    y += 4;
+                    return;
+                }
+
+                // Strip bold tags for the PDF renderer (since jsPDF standard fonts don't support inline bold easily)
+                let text = line.replace(/\*\*/g, '');
+
+                if (line.startsWith('### ')) {
+                    doc.setFontSize(13);
+                    doc.setFont("helvetica", "bold");
+                    text = text.replace('### ', '');
+                    y += 4;
+                } else if (line.startsWith('## ')) {
+                    doc.setFontSize(15);
+                    doc.setFont("helvetica", "bold");
+                    text = text.replace('## ', '');
+                    y += 6;
+                } else if (line.startsWith('# ')) {
+                    doc.setFontSize(17);
+                    doc.setFont("helvetica", "bold");
+                    text = text.replace('# ', '');
+                    y += 8;
+                } else if (line.startsWith('- ') || line.startsWith('* ')) {
+                    doc.setFontSize(11);
+                    doc.setFont("helvetica", "normal");
+                    text = "• " + text.substring(2);
+                } else {
+                    doc.setFontSize(11);
+                    doc.setFont("helvetica", "normal");
+                }
+
+                // Wrap text
+                const splitText = doc.splitTextToSize(text, maxWidth);
+
+                splitText.forEach((t: string) => {
+                    // Check for page break
+                    if (y > pageHeight - 20) {
+                        doc.addPage();
+                        y = 20; // reset y
+                    }
+                    // slightly indent list items
+                    const xPos = text.startsWith("• ") ? margin + 5 : margin;
+                    doc.text(t, xPos, y);
+                    y += 6;
+                });
+
+                // Extra spacing after headings
+                if (line.startsWith('#')) y += 3;
+            });
+
+            doc.save("ai-summary.pdf");
+
+        } catch (error) {
+            console.error('PDF generation failed:', error);
+            alert('Failed to generate PDF. Please try again.');
+        } finally {
+            setIsExportingPDF(false);
+        }
+    };
+
     const funnel: FunnelEntry[] = overview
         ? Object.entries(FUNNEL_LABELS).map(([key, label]) => ({
             label,
@@ -356,7 +439,7 @@ export default function AdminDashboard() {
     return (
         <main className="min-h-screen bg-slate-900 text-white pb-24">
             {/* Header */}
-            <header className="border-b border-white/10 bg-slate-900/80 backdrop-blur sticky top-0 z-20 pt-14 md:pt-0 md:pl-52">
+            <header className="border-b border-white/10 bg-slate-900/80 backdrop-blur sticky top-0 z-20">
                 <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
                     <h1 className="font-bold text-lg">Survey Admin</h1>
                     <button
@@ -1028,31 +1111,50 @@ export default function AdminDashboard() {
                     <div className="space-y-6">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="font-semibold text-lg">AI Insights &amp; Findings</h2>
-                            <button
-                                onClick={handleGenerateSummary}
-                                disabled={isGeneratingSummary}
-                                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50 disabled:text-white/50 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-lg shadow-indigo-500/20"
-                            >
-                                {isGeneratingSummary ? (
-                                    <>
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={handleExportPDF}
+                                    disabled={!aiSummary || isGeneratingSummary || isExportingPDF}
+                                    className="px-5 py-2.5 bg-slate-800 border border-white/10 hover:bg-slate-700 disabled:bg-slate-900/50 disabled:text-white/30 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-lg"
+                                >
+                                    {isExportingPDF ? (
                                         <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                                         </svg>
-                                        Analyzing...
-                                    </>
-                                ) : (
-                                    <>
+                                    ) : (
                                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                         </svg>
-                                        {aiSummary ? 'Regenerate AI Summary' : 'Generate AI Summary'}
-                                    </>
-                                )}
-                            </button>
+                                    )}
+                                    {isExportingPDF ? 'Exporting...' : 'Export to PDF'}
+                                </button>
+                                <button
+                                    onClick={handleGenerateSummary}
+                                    disabled={isGeneratingSummary}
+                                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50 disabled:text-white/50 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-lg shadow-indigo-500/20"
+                                >
+                                    {isGeneratingSummary ? (
+                                        <>
+                                            <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                                            </svg>
+                                            Analyzing...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                            </svg>
+                                            {aiSummary ? 'Regenerate AI Summary' : 'Generate AI Summary'}
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </div>
 
-                        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 min-h-[400px]">
+                        <div id="ai-summary-content" className="bg-white/5 border border-white/10 rounded-2xl p-8 min-h-[400px]">
                             {isGeneratingSummary ? (
                                 <div className="h-full flex flex-col items-center justify-center text-white/50 py-32">
                                     <svg className="animate-spin h-10 w-10 mb-6 text-indigo-400" viewBox="0 0 24 24">

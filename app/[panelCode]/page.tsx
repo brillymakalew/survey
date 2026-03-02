@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import QuestionRenderer, { Question } from '@/components/survey/QuestionRenderer';
 import ProgressBar from '@/components/survey/ProgressBar';
+import LogoOverlay from '@/components/survey/LogoOverlay';
 
 interface PhaseInfo {
     phase_code: string;
@@ -16,19 +17,19 @@ const PANEL_META: Record<string, { title: string; subtitle: string; description:
     panel_1: {
         title: 'Panel 1',
         subtitle: 'Ideation & Research Translation',
-        description: 'This panel focuses on your experience at the ideation stage (T0-T1). We\'d like to understand the bottlenecks and enablers in initiating research translation.',
+        description: 'This panel focuses on your experience at the ideation stage. We\'d like to understand the bottlenecks and enablers in initiating research translation.',
         emoji: '💡',
     },
     panel_2: {
         title: 'Panel 2',
         subtitle: 'Prototyping & Trials',
-        description: 'This panel explores the prototyping and trials stage (T2-T3) — the challenges you face and what enables progress when moving from lab to real-world application.',
+        description: 'This panel explores the prototyping and trials stage — the challenges you face and what enables progress when moving from lab to real-world application.',
         emoji: '🔬',
     },
     panel_3: {
         title: 'Panel 3',
         subtitle: 'Scale-Up',
-        description: 'This panel covers the scale-up phase (T4-T5). Questions will be made available by the organizers shortly.',
+        description: 'This panel covers the scale-up phase. Questions will be made available by the organizers shortly.',
         emoji: '🚀',
     },
     closing: {
@@ -350,24 +351,10 @@ export default function PanelPage() {
                         {questions.length === 0 ? 'View Panel' : 'Begin Questionnaire'} →
                     </button>
 
-                    <p className="text-center text-white/20 text-xs mt-6">
+                    <p className="text-center text-white/20 text-xs mt-6 mb-8">
                         Your answers are stored securely and used for research analysis only.
                     </p>
-
-                    <div className="mt-6 text-center pb-2">
-                        <button
-                            onClick={() => {
-                                if (typeof window !== 'undefined') {
-                                    localStorage.removeItem('respondent_session_token');
-                                    localStorage.removeItem('respondent_id');
-                                    window.location.href = '/';
-                                }
-                            }}
-                            className="text-white/20 hover:text-white/40 text-[10px] transition-colors uppercase tracking-wider"
-                        >
-                            Log out & clear session
-                        </button>
-                    </div>
+                    <LogoOverlay />
                 </div>
             </main>
         );
@@ -427,22 +414,7 @@ export default function PanelPage() {
                     )}
                 </div>
 
-                {/* Logout Button */}
-                <div className="mt-8 text-center">
-                    <button
-                        onClick={() => {
-                            if (typeof window !== 'undefined') {
-                                localStorage.removeItem('respondent_session_token');
-                                localStorage.removeItem('respondent_id');
-                                localStorage.removeItem(`survey_draft_${panelCode}`);
-                                window.location.href = '/';
-                            }
-                        }}
-                        className="text-white/20 hover:text-white/40 text-[10px] transition-colors uppercase tracking-wider"
-                    >
-                        Log out & clear session
-                    </button>
-                </div>
+                <LogoOverlay />
             </div>
 
             {/* Sticky bottom navigation — great for mobile */}
