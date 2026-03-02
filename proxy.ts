@@ -6,10 +6,10 @@ const SESSION_SECRET = new TextEncoder().encode(
 );
 
 /**
- * Middleware — protects /admin/dashboard and /api/admin/* routes with JWT.
+ * Proxy — protects /admin/dashboard and /api/admin/* routes with JWT.
  * PRD §5.7, §11
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     const isAdminDashboard = pathname.startsWith('/admin/dashboard');
