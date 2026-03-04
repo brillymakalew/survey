@@ -452,7 +452,7 @@ export default function AdminDashboard() {
 
                     <button
                         onClick={handleLogout}
-                        className="text-white/40 hover:text-white text-sm transition-colors relative z-10"
+                        className="text-white/40 hover:text-white text-base transition-colors relative z-10"
                     >
                         Sign Out
                     </button>
@@ -462,7 +462,7 @@ export default function AdminDashboard() {
                         <button
                             key={t.id}
                             onClick={() => setActiveTab(t.id)}
-                            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-all whitespace-nowrap ${activeTab === t.id
+                            className={`px-4 py-2.5 text-base font-medium border-b-2 transition-all whitespace-nowrap ${activeTab === t.id
                                 ? 'border-blue-400 text-blue-300'
                                 : 'border-transparent text-white/40 hover:text-white/70'
                                 }`}
@@ -475,7 +475,7 @@ export default function AdminDashboard() {
 
             <div className="max-w-7xl mx-auto px-6 py-8">
                 {loading && (
-                    <div className="text-white/40 text-sm flex items-center gap-2 mb-6">
+                    <div className="text-white/40 text-base flex items-center gap-2 mb-6">
                         <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
@@ -498,8 +498,8 @@ export default function AdminDashboard() {
                                 { label: 'Closing Done', value: overview.funnel?.closing_completed ?? 0 },
                             ].map(card => (
                                 <div key={card.label} className="bg-white/5 border border-white/10 rounded-2xl p-4">
-                                    <p className="text-white/40 text-xs mb-1">{card.label}</p>
-                                    <p className="text-2xl font-bold text-white">{card.value}</p>
+                                    <p className="text-white/40 text-sm mb-1">{card.label}</p>
+                                    <p className="text-3xl font-bold text-white">{card.value}</p>
                                 </div>
                             ))}
                         </div>
@@ -508,13 +508,13 @@ export default function AdminDashboard() {
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                             {/* Line / Bar Chart for Funnel across the width */}
                             <div className="bg-white/5 border border-white/10 rounded-2xl p-6 lg:col-span-3">
-                                <h2 className="font-semibold mb-6 text-sm">Overall Progression</h2>
+                                <h2 className="font-semibold mb-6 text-base">Overall Progression</h2>
                                 <ResponsiveContainer width="100%" height={260}>
                                     <BarChart data={funnel} margin={{ left: -20, right: 0, top: 20, bottom: 0 }}>
-                                        <XAxis dataKey="label" stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 11 }} />
-                                        <YAxis stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 11 }} />
+                                        <XAxis dataKey="label" stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 13 }} />
+                                        <YAxis stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 13 }} />
                                         <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #ffffff20', borderRadius: 8 }} itemStyle={{ color: '#ffffff' }} cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} />
-                                        <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} label={{ position: 'top', fill: '#ffffff90', fontSize: 12, fontWeight: 'bold' }} />
+                                        <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} label={{ position: 'top', fill: '#ffffff90', fontSize: 14, fontWeight: 'bold' }} />
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>
@@ -523,7 +523,7 @@ export default function AdminDashboard() {
                             {overview.collaboration_intent.length > 0 && (
                                 <div className="bg-white/5 border border-white/10 rounded-2xl p-6 relative flex flex-col items-center">
                                     <div className="flex justify-between items-start w-full mb-2 gap-4">
-                                        <h2 className="font-semibold text-sm">Collaboration Intent</h2>
+                                        <h2 className="font-semibold text-base">Collaboration Intent</h2>
                                         <button
                                             onClick={() => setFullScreenChart('pie')}
                                             className="text-white/40 hover:text-white p-1 rounded hover:bg-white/10 transition-colors flex-shrink-0"
@@ -554,7 +554,7 @@ export default function AdminDashboard() {
                             {affiliationPie.length > 0 && (
                                 <div className="bg-white/5 border border-white/10 rounded-2xl p-6 relative flex flex-col items-center">
                                     <div className="flex justify-between items-start w-full mb-2 gap-4">
-                                        <h2 className="font-semibold text-sm">Affiliation</h2>
+                                        <h2 className="font-semibold text-base">Affiliation</h2>
                                     </div>
                                     <ResponsiveContainer width="100%" height={220}>
                                         <PieChart>
@@ -576,7 +576,7 @@ export default function AdminDashboard() {
                             {countryPie.length > 0 && (
                                 <div className="bg-white/5 border border-white/10 rounded-2xl p-6 relative flex flex-col items-center">
                                     <div className="flex justify-between items-start w-full mb-2 gap-4">
-                                        <h2 className="font-semibold text-sm">Country Base</h2>
+                                        <h2 className="font-semibold text-base">Country Base</h2>
                                     </div>
                                     <ResponsiveContainer width="100%" height={220}>
                                         <PieChart>
@@ -599,7 +599,7 @@ export default function AdminDashboard() {
                         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
                             <h2 className="font-semibold mb-4">Recent Respondents</h2>
                             <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
+                                <table className="w-full text-base">
                                     <thead>
                                         <tr className="text-white/40 text-left border-b border-white/10">
                                             <th className="pb-2 pr-4">Name</th>
@@ -614,7 +614,7 @@ export default function AdminDashboard() {
                                                 <td className="py-2.5 pr-4 text-white">{r.full_name}</td>
                                                 <td className="py-2.5 pr-4 text-white/60 capitalize">{r.current_phase.replace('phase_', 'Panel ').replace('closing', 'Closing')}</td>
                                                 <td className="py-2.5 pr-4">
-                                                    <span className={`text-xs px-2 py-0.5 rounded-full ${r.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-white/40'
+                                                    <span className={`text-sm px-2 py-0.5 rounded-full ${r.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-white/40'
                                                         }`}>{r.status}</span>
                                                 </td>
                                                 <td className="py-2.5 text-white/40">{new Date(r.created_at).toLocaleDateString()}</td>
@@ -629,11 +629,11 @@ export default function AdminDashboard() {
                         <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-6 mt-8 flex items-center justify-between">
                             <div>
                                 <h2 className="font-semibold text-red-400 mb-1">Danger Zone</h2>
-                                <p className="text-white/60 text-sm">Permanently wipe all respondents and survey data from the database.</p>
+                                <p className="text-white/60 text-base">Permanently wipe all respondents and survey data from the database.</p>
                             </div>
                             <button
                                 onClick={() => setShowClearModal(true)}
-                                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-colors"
+                                className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-base font-medium transition-colors"
                             >
                                 Clear All Data
                             </button>
@@ -658,10 +658,10 @@ export default function AdminDashboard() {
                         </div>
                         <ResponsiveContainer width="100%" height={320}>
                             <BarChart data={funnel} layout="vertical" margin={{ left: 20 }}>
-                                <XAxis type="number" stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 12 }} />
-                                <YAxis dataKey="label" type="category" width={160} tick={{ fill: '#ffffff80', fontSize: 12 }} />
+                                <XAxis type="number" stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 14 }} />
+                                <YAxis dataKey="label" type="category" width={160} tick={{ fill: '#ffffff80', fontSize: 14 }} />
                                 <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #ffffff20', borderRadius: 8 }} />
-                                <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} label={{ position: 'right', fill: '#ffffff60', fontSize: 11 }} />
+                                <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} label={{ position: 'right', fill: '#ffffff60', fontSize: 13 }} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -670,12 +670,12 @@ export default function AdminDashboard() {
                 {/* ── PER PHASE ────────────────────────────────── */}
                 {activeTab === 'phases' && overview && (
                     <div className="space-y-4">
-                        <h2 className="font-semibold text-lg">Panel Completion</h2>
+                        <h2 className="font-semibold text-xl">Panel Completion</h2>
                         <div className="grid md:grid-cols-2 gap-4">
                             {overview.phase_stats.map(ps => (
                                 <div key={ps.phase_code} className="bg-white/5 border border-white/10 rounded-2xl p-5">
                                     <h3 className="font-medium text-blue-300 mb-3">{ps.phase_name}</h3>
-                                    <div className="space-y-2 text-sm">
+                                    <div className="space-y-2 text-base">
                                         <div className="flex justify-between text-white/60">
                                             <span>Completion Rate</span>
                                             <span className="text-white font-medium">{ps.completion_rate_pct ?? 0}%</span>
@@ -683,7 +683,7 @@ export default function AdminDashboard() {
                                         <div className="h-1.5 bg-white/10 rounded-full">
                                             <div className="h-full bg-blue-500 rounded-full" style={{ width: `${ps.completion_rate_pct ?? 0}%` }} />
                                         </div>
-                                        <div className="flex justify-between text-white/40 text-xs pt-1">
+                                        <div className="flex justify-between text-white/40 text-sm pt-1">
                                             <span>{ps.completed_count ?? 0} completed / {ps.total_with_progress ?? 0} started</span>
                                             {ps.avg_completion_minutes > 0 && <span>~{ps.avg_completion_minutes} min avg</span>}
                                         </div>
@@ -697,12 +697,12 @@ export default function AdminDashboard() {
                 {/* ── CROSSTABS ────────────────────────────────── */}
                 {activeTab === 'crosstabs' && overview && (
                     <div className="space-y-6">
-                        <h2 className="font-semibold text-lg">Affiliation × Country Breakdown</h2>
+                        <h2 className="font-semibold text-xl">Affiliation × Country Breakdown</h2>
                         {overview.affiliation_breakdown.length === 0 ? (
-                            <p className="text-white/40 text-sm">No data yet.</p>
+                            <p className="text-white/40 text-base">No data yet.</p>
                         ) : (
                             <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-                                <table className="w-full text-sm">
+                                <table className="w-full text-base">
                                     <thead className="border-b border-white/10">
                                         <tr className="text-white/40 text-left">
                                             <th className="px-5 py-3">Affiliation</th>
@@ -734,22 +734,22 @@ export default function AdminDashboard() {
                                 placeholder="Search by name…"
                                 value={search}
                                 onChange={e => { setSearch(e.target.value); setPagination(p => ({ ...p, page: 1 })); }}
-                                className="bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white text-sm
+                                className="bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white text-base
                   placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-400/40 w-56"
                             />
                             <select
                                 value={phaseFilter}
                                 onChange={e => { setPhaseFilter(e.target.value); setPagination(p => ({ ...p, page: 1 })); }}
-                                className="bg-slate-800 border border-white/20 rounded-xl px-4 py-2 text-white text-sm focus:outline-none"
+                                className="bg-slate-800 border border-white/20 rounded-xl px-4 py-2 text-white text-base focus:outline-none"
                             >
                                 <option value="">All Panels</option>
                                 {PHASES.map(p => <option key={p} value={p}>{p.replace('phase_', 'Panel ').replace('closing', 'Closing')}</option>)}
                             </select>
-                            <span className="text-white/30 text-xs ml-auto">{pagination.total} total</span>
+                            <span className="text-white/30 text-sm ml-auto">{pagination.total} total</span>
                         </div>
 
                         <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-                            <table className="w-full text-sm">
+                            <table className="w-full text-base">
                                 <thead className="border-b border-white/10">
                                     <tr className="text-white/40 text-left">
                                         <th className="px-5 py-3">Name</th>
@@ -786,14 +786,14 @@ export default function AdminDashboard() {
                                 <button
                                     onClick={() => setPagination(p => ({ ...p, page: p.page - 1 }))}
                                     disabled={pagination.page === 1}
-                                    className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white/60
+                                    className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-base text-white/60
                     disabled:opacity-30 hover:bg-white/10 transition-all"
                                 >← Prev</button>
-                                <span className="text-white/30 text-sm">Page {pagination.page} / {pagination.total_pages}</span>
+                                <span className="text-white/30 text-base">Page {pagination.page} / {pagination.total_pages}</span>
                                 <button
                                     onClick={() => setPagination(p => ({ ...p, page: p.page + 1 }))}
                                     disabled={pagination.page === pagination.total_pages}
-                                    className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white/60
+                                    className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-base text-white/60
                     disabled:opacity-30 hover:bg-white/10 transition-all"
                                 >Next →</button>
                             </div>
@@ -808,7 +808,7 @@ export default function AdminDashboard() {
                             <select
                                 value={phaseFilter || 'panel_1'}
                                 onChange={e => setPhaseFilter(e.target.value)}
-                                className="bg-slate-800 border border-white/20 rounded-xl px-4 py-2 text-white text-sm focus:outline-none"
+                                className="bg-slate-800 border border-white/20 rounded-xl px-4 py-2 text-white text-base focus:outline-none"
                             >
                                 {PHASES.map(p => <option key={p} value={p}>{p.replace('panel_', 'Panel ').replace('closing', 'Closing')}</option>)}
                             </select>
@@ -816,7 +816,7 @@ export default function AdminDashboard() {
                             <select
                                 value={affiliationFilter}
                                 onChange={e => setAffiliationFilter(e.target.value)}
-                                className="bg-slate-800 border border-white/20 rounded-xl px-4 py-2 text-white text-sm focus:outline-none"
+                                className="bg-slate-800 border border-white/20 rounded-xl px-4 py-2 text-white text-base focus:outline-none"
                             >
                                 <option value="">All Affiliations</option>
                                 <option value="Academia">Academia</option>
@@ -827,7 +827,7 @@ export default function AdminDashboard() {
                             <select
                                 value={countryFilter}
                                 onChange={e => setCountryFilter(e.target.value)}
-                                className="bg-slate-800 border border-white/20 rounded-xl px-4 py-2 text-white text-sm focus:outline-none"
+                                className="bg-slate-800 border border-white/20 rounded-xl px-4 py-2 text-white text-base focus:outline-none"
                             >
                                 <option value="">All Countries</option>
                                 <option value="Indonesia">Indonesia</option>
@@ -836,14 +836,14 @@ export default function AdminDashboard() {
                             </select>
                         </div>
 
-                        {qLoading && <div className="text-white/40 text-sm">Loading questions...</div>}
+                        {qLoading && <div className="text-white/40 text-base">Loading questions...</div>}
 
                         {!qLoading && questionsData && (
                             <div className="space-y-8">
                                 {/* Option Counts Rendering */}
                                 {questionsData.option_counts.length > 0 && (
                                     <div className="space-y-6">
-                                        <h3 className="font-semibold text-lg border-b border-white/10 pb-2">Multiple Choice & Selection</h3>
+                                        <h3 className="font-semibold text-xl border-b border-white/10 pb-2">Multiple Choice & Selection</h3>
                                         <div className="grid grid-cols-1 gap-6">
                                             {Array.from(new Set(questionsData.option_counts.map(q => q.question_code))).map(code => {
                                                 const opts = questionsData.option_counts.filter(q => q.question_code === code);
@@ -860,7 +860,7 @@ export default function AdminDashboard() {
                                                         </div>
 
                                                         <div className="relative z-10 flex justify-between items-start mb-4 gap-4">
-                                                            <h4 className="font-medium text-white/80 text-sm">{prompt}</h4>
+                                                            <h4 className="font-medium text-white/80 text-base">{prompt}</h4>
                                                             <button
                                                                 onClick={() => setFullScreenChart(`q_${code}`)}
                                                                 className="text-white/40 hover:text-white p-1 rounded hover:bg-white/10 transition-colors flex-shrink-0"
@@ -882,14 +882,14 @@ export default function AdminDashboard() {
                                                                         <feDropShadow dx="0" dy="0" stdDeviation="4" floodColor="#d946ef" floodOpacity="0.4" />
                                                                     </filter>
                                                                 </defs>
-                                                                <XAxis type="number" stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 11 }} />
-                                                                <YAxis dataKey="opt_value" type="category" width={250} tick={{ fill: '#ffffff80', fontSize: 11 }} />
+                                                                <XAxis type="number" stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 13 }} />
+                                                                <YAxis dataKey="opt_value" type="category" width={250} tick={{ fill: '#ffffff80', fontSize: 13 }} />
                                                                 <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #ffffff20', borderRadius: 8 }} cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} itemStyle={{ color: '#ffffff' }} />
                                                                 <Bar
                                                                     dataKey="selection_count"
                                                                     fill="url(#colorGlow)"
                                                                     radius={[0, 6, 6, 0]}
-                                                                    label={{ position: 'right', fill: '#ffffff90', fontSize: 12, fontWeight: 'bold' }}
+                                                                    label={{ position: 'right', fill: '#ffffff90', fontSize: 14, fontWeight: 'bold' }}
                                                                     shape={(props: any) => {
                                                                         const { x, y, width, height } = props;
                                                                         return <rect x={x} y={y + 4} width={width} height={Math.max(4, height - 8)} fill="url(#colorGlow)" rx={6} ry={6} filter="url(#glowEffect)" />;
@@ -907,7 +907,7 @@ export default function AdminDashboard() {
                                 {/* Likert Rendering */}
                                 {questionsData.likert_summary.length > 0 && (
                                     <div className="space-y-6">
-                                        <h3 className="font-semibold text-lg border-b border-white/10 pb-2">Likert Scales (1-7)</h3>
+                                        <h3 className="font-semibold text-xl border-b border-white/10 pb-2">Likert Scales (1-7)</h3>
                                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                                             {questionsData.likert_summary.map(l => (
                                                 <div key={l.question_code} className="bg-white/5 border border-white/10 rounded-2xl p-5 relative overflow-hidden group">
@@ -919,12 +919,12 @@ export default function AdminDashboard() {
                                                     </div>
 
                                                     <div className="relative z-10">
-                                                        <h4 className="font-medium text-white/80 mb-3 text-sm line-clamp-3" title={l.prompt}>{l.prompt}</h4>
+                                                        <h4 className="font-medium text-white/80 mb-3 text-base line-clamp-3" title={l.prompt}>{l.prompt}</h4>
                                                         <div className="flex items-end gap-3 mb-2">
-                                                            <span className="text-3xl font-bold text-blue-400">{l.avg_score.toFixed(1)}</span>
-                                                            <span className="text-white/40 text-sm pb-1">Average</span>
+                                                            <span className="text-4xl font-bold text-blue-400">{l.avg_score.toFixed(1)}</span>
+                                                            <span className="text-white/40 text-base pb-1">Average</span>
                                                         </div>
-                                                        <div className="flex justify-between text-xs text-white/30 border-t border-white/10 pt-2">
+                                                        <div className="flex justify-between text-sm text-white/30 border-t border-white/10 pt-2">
                                                             <span>Min: {l.min_score}</span>
                                                             <span>Max: {l.max_score}</span>
                                                             <span>{l.response_count} responses</span>
@@ -937,7 +937,7 @@ export default function AdminDashboard() {
                                 )}
 
                                 {questionsData.option_counts.length === 0 && questionsData.likert_summary.length === 0 && (
-                                    <div className="text-white/40 text-sm">No responses yet for this phase.</div>
+                                    <div className="text-white/40 text-base">No responses yet for this phase.</div>
                                 )}
                             </div>
                         )}
@@ -954,30 +954,30 @@ export default function AdminDashboard() {
                                     placeholder="Search deleted by name…"
                                     value={deletedSearch}
                                     onChange={e => { setDeletedSearch(e.target.value); setDeletedPagination(p => ({ ...p, page: 1 })); }}
-                                    className="bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white text-sm
+                                    className="bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-white text-base
                                         placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-400/40 w-56"
                                 />
                                 <select
                                     value={deletedPhaseFilter}
                                     onChange={e => { setDeletedPhaseFilter(e.target.value); setDeletedPagination(p => ({ ...p, page: 1 })); }}
-                                    className="bg-slate-800 border border-white/20 rounded-xl px-4 py-2 text-white text-sm focus:outline-none"
+                                    className="bg-slate-800 border border-white/20 rounded-xl px-4 py-2 text-white text-base focus:outline-none"
                                 >
                                     <option value="">All Panels</option>
                                     {PHASES.map(p => <option key={p} value={p}>{p.replace('phase_', 'Panel ').replace('closing', 'Closing')}</option>)}
                                 </select>
-                                <span className="text-white/30 text-xs ml-2">{deletedPagination.total} total deleted</span>
+                                <span className="text-white/30 text-sm ml-2">{deletedPagination.total} total deleted</span>
                             </div>
 
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setShowRestoreModal(true)}
-                                    className="px-4 py-2 bg-green-600/20 text-green-400 hover:bg-green-600/30 border border-green-500/30 rounded-lg text-sm font-medium transition-colors"
+                                    className="px-4 py-2 bg-green-600/20 text-green-400 hover:bg-green-600/30 border border-green-500/30 rounded-lg text-base font-medium transition-colors"
                                 >
                                     Restore All Data
                                 </button>
                                 <button
                                     onClick={() => setShowPermanentDeleteModal(true)}
-                                    className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-medium transition-colors"
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-base font-medium transition-colors"
                                 >
                                     Permanently Delete All
                                 </button>
@@ -985,7 +985,7 @@ export default function AdminDashboard() {
                         </div>
 
                         <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-                            <table className="w-full text-sm">
+                            <table className="w-full text-base">
                                 <thead className="border-b border-white/10">
                                     <tr className="text-white/40 text-left">
                                         <th className="px-5 py-3">Name</th>
@@ -1022,14 +1022,14 @@ export default function AdminDashboard() {
                                 <button
                                     onClick={() => setDeletedPagination(p => ({ ...p, page: p.page - 1 }))}
                                     disabled={deletedPagination.page === 1}
-                                    className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white/60
+                                    className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-base text-white/60
                     disabled:opacity-30 hover:bg-white/10 transition-all"
                                 >← Prev</button>
-                                <span className="text-white/30 text-sm">Page {deletedPagination.page} / {deletedPagination.total_pages}</span>
+                                <span className="text-white/30 text-base">Page {deletedPagination.page} / {deletedPagination.total_pages}</span>
                                 <button
                                     onClick={() => setDeletedPagination(p => ({ ...p, page: p.page + 1 }))}
                                     disabled={deletedPagination.page === deletedPagination.total_pages}
-                                    className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white/60
+                                    className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-base text-white/60
                     disabled:opacity-30 hover:bg-white/10 transition-all"
                                 >Next →</button>
                             </div>
@@ -1041,7 +1041,7 @@ export default function AdminDashboard() {
                 {activeTab === 'exports' && (
                     <div className="grid md:grid-cols-2 gap-8 max-w-4xl">
                         <div className="space-y-4">
-                            <h2 className="font-semibold text-lg">Export Data</h2>
+                            <h2 className="font-semibold text-xl">Export Data</h2>
                             {[
                                 { label: 'Respondents (CSV)', href: '/api/admin/export?type=respondents&format=csv' },
                                 { label: 'Respondents (XLSX)', href: '/api/admin/export?type=respondents&format=xlsx' },
@@ -1055,7 +1055,7 @@ export default function AdminDashboard() {
                                     className="flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl
                       px-5 py-4 text-white hover:bg-white/10 hover:border-blue-400/30 transition-all"
                                 >
-                                    <span className="text-sm">{label}</span>
+                                    <span className="text-base">{label}</span>
                                     <svg className="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                             d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -1065,34 +1065,34 @@ export default function AdminDashboard() {
                         </div>
 
                         <div className="space-y-4">
-                            <h2 className="font-semibold text-lg">Import Data</h2>
+                            <h2 className="font-semibold text-xl">Import Data</h2>
                             <form onSubmit={handleImport} className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-5">
                                 <div>
-                                    <label className="block text-white/60 text-sm mb-2">Import Type</label>
+                                    <label className="block text-white/60 text-base mb-2">Import Type</label>
                                     <select
                                         value={importType}
                                         onChange={e => setImportType(e.target.value)}
-                                        className="w-full bg-slate-800 border border-white/20 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition-shadow"
+                                        className="w-full bg-slate-800 border border-white/20 rounded-xl px-4 py-2.5 text-white text-base focus:outline-none focus:ring-2 focus:ring-blue-400/40 transition-shadow"
                                     >
                                         <option value="respondents">1. Respondents Profile</option>
                                         <option value="responses">2. Survey Responses</option>
                                     </select>
                                 </div>
                                 <div className="border border-white/10 rounded-xl p-4 bg-black/20">
-                                    <label className="block text-white/60 text-sm mb-3">Upload File</label>
+                                    <label className="block text-white/60 text-base mb-3">Upload File</label>
                                     <input
                                         id="importFileInput"
                                         type="file"
                                         accept=".csv, .xlsx, .xls"
                                         onChange={e => setImportFile(e.target.files?.[0] || null)}
-                                        className="w-full text-sm text-white/60 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-500/20 file:text-blue-300 hover:file:bg-blue-500/30 file:transition-colors cursor-pointer"
+                                        className="w-full text-base text-white/60 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-500/20 file:text-blue-300 hover:file:bg-blue-500/30 file:transition-colors cursor-pointer"
                                     />
                                     <p className="text-[11px] text-white/40 mt-3">Upload a CSV or XLSX file matching the exact format from the Export Data tool.</p>
                                 </div>
                                 <button
                                     type="submit"
                                     disabled={!importFile || isImporting}
-                                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/30 disabled:text-white/30 text-white rounded-xl text-sm font-semibold transition-colors flex justify-center items-center gap-2"
+                                    className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/30 disabled:text-white/30 text-white rounded-xl text-base font-semibold transition-colors flex justify-center items-center gap-2"
                                 >
                                     {isImporting ? (
                                         <>
@@ -1105,7 +1105,7 @@ export default function AdminDashboard() {
                                     ) : 'Start Import'}
                                 </button>
                                 {importMessage && (
-                                    <div className={`p-3 rounded-xl text-sm border ${importMessage.startsWith('Error') ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-green-500/10 border-green-500/20 text-green-400'}`}>
+                                    <div className={`p-3 rounded-xl text-base border ${importMessage.startsWith('Error') ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-green-500/10 border-green-500/20 text-green-400'}`}>
                                         {importMessage}
                                     </div>
                                 )}
@@ -1118,12 +1118,12 @@ export default function AdminDashboard() {
                 {activeTab === 'ai-summary' && (
                     <div className="space-y-6">
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="font-semibold text-lg">AI Insights &amp; Findings</h2>
+                            <h2 className="font-semibold text-xl">AI Insights &amp; Findings</h2>
                             <div className="flex gap-3">
                                 <button
                                     onClick={handleExportPDF}
                                     disabled={!aiSummary || isGeneratingSummary || isExportingPDF}
-                                    className="px-5 py-2.5 bg-slate-800 border border-white/10 hover:bg-slate-700 disabled:bg-slate-900/50 disabled:text-white/30 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-lg"
+                                    className="px-5 py-2.5 bg-slate-800 border border-white/10 hover:bg-slate-700 disabled:bg-slate-900/50 disabled:text-white/30 text-white text-base font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-lg"
                                 >
                                     {isExportingPDF ? (
                                         <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
@@ -1140,7 +1140,7 @@ export default function AdminDashboard() {
                                 <button
                                     onClick={handleGenerateSummary}
                                     disabled={isGeneratingSummary}
-                                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50 disabled:text-white/50 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-lg shadow-indigo-500/20"
+                                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50 disabled:text-white/50 text-white text-base font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-lg shadow-indigo-500/20"
                                 >
                                     {isGeneratingSummary ? (
                                         <>
@@ -1169,15 +1169,15 @@ export default function AdminDashboard() {
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                                         <path className="opacity-75" fill="currentColor" strokeLinecap="round" d="M4 12a8 8 0 018-8v8H4z" />
                                     </svg>
-                                    <p className="text-lg font-medium animate-pulse text-indigo-200">AI is analyzing the survey data...</p>
-                                    <p className="text-sm mt-2 opacity-60">This may take a few seconds.</p>
+                                    <p className="text-xl font-medium animate-pulse text-indigo-200">AI is analyzing the survey data...</p>
+                                    <p className="text-base mt-2 opacity-60">This may take a few seconds.</p>
                                 </div>
                             ) : aiSummary ? (
                                 <div className="prose prose-invert prose-indigo max-w-none text-white/80">
                                     {aiSummary.split('\n').map((line, i) => {
-                                        if (line.startsWith('### ')) return <h3 key={i} className="text-lg font-semibold text-indigo-300 mt-6 mb-3">{line.replace('### ', '').replace(/\\*\\*/g, '')}</h3>;
-                                        if (line.startsWith('## ')) return <h2 key={i} className="text-xl font-bold text-white mt-8 mb-4 border-b border-white/10 pb-2">{line.replace('## ', '').replace(/\\*\\*/g, '')}</h2>;
-                                        if (line.startsWith('# ')) return <h1 key={i} className="text-2xl font-extrabold text-white mt-8 mb-6">{line.replace('# ', '').replace(/\\*\\*/g, '')}</h1>;
+                                        if (line.startsWith('### ')) return <h3 key={i} className="text-xl font-semibold text-indigo-300 mt-6 mb-3">{line.replace('### ', '').replace(/\\*\\*/g, '')}</h3>;
+                                        if (line.startsWith('## ')) return <h2 key={i} className="text-2xl font-bold text-white mt-8 mb-4 border-b border-white/10 pb-2">{line.replace('## ', '').replace(/\\*\\*/g, '')}</h2>;
+                                        if (line.startsWith('# ')) return <h1 key={i} className="text-3xl font-extrabold text-white mt-8 mb-6">{line.replace('# ', '').replace(/\\*\\*/g, '')}</h1>;
                                         if (line.startsWith('- ') || line.startsWith('* ')) {
                                             const content = line.substring(2);
                                             // Bold text processing
@@ -1213,8 +1213,8 @@ export default function AdminDashboard() {
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                                         </svg>
                                     </div>
-                                    <p className="text-lg font-medium text-white/70">No Insights Generated Yet</p>
-                                    <p className="text-sm mt-2 max-w-sm mx-auto">Click the generate button above to analyze your dataset using AI and uncover key findings and action items.</p>
+                                    <p className="text-xl font-medium text-white/70">No Insights Generated Yet</p>
+                                    <p className="text-base mt-2 max-w-sm mx-auto">Click the generate button above to analyze your dataset using AI and uncover key findings and action items.</p>
                                 </div>
                             )}
                         </div>
@@ -1230,7 +1230,7 @@ export default function AdminDashboard() {
                             {fullScreenChart === 'pie' && overview && overview.collaboration_intent.length > 0 && (
                                 <>
                                     <div className="flex items-center justify-between p-6 border-b border-white/10 bg-slate-800/50">
-                                        <h3 className="text-xl font-bold text-white pr-8">Collaboration Intent</h3>
+                                        <h3 className="text-2xl font-bold text-white pr-8">Collaboration Intent</h3>
                                         <button onClick={() => setFullScreenChart(null)} className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors absolute top-4 right-4">
                                             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                         </button>
@@ -1253,7 +1253,7 @@ export default function AdminDashboard() {
                             {fullScreenChart === 'funnel' && (
                                 <>
                                     <div className="flex items-center justify-between p-6 border-b border-white/10 bg-slate-800/50">
-                                        <h3 className="text-xl font-bold text-white pr-8">Response Funnel</h3>
+                                        <h3 className="text-2xl font-bold text-white pr-8">Response Funnel</h3>
                                         <button onClick={() => setFullScreenChart(null)} className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors absolute top-4 right-4">
                                             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                         </button>
@@ -1261,10 +1261,10 @@ export default function AdminDashboard() {
                                     <div className="flex-1 p-6">
                                         <ResponsiveContainer width="100%" height="100%" minHeight={400}>
                                             <BarChart data={funnel} layout="vertical" margin={{ left: 20, right: 60, top: 20, bottom: 20 }}>
-                                                <XAxis type="number" stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 16 }} />
-                                                <YAxis dataKey="label" type="category" width={220} tick={{ fill: '#ffffff80', fontSize: 16 }} />
+                                                <XAxis type="number" stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 18 }} />
+                                                <YAxis dataKey="label" type="category" width={220} tick={{ fill: '#ffffff80', fontSize: 18 }} />
                                                 <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #ffffff20', borderRadius: 8, fontSize: '16px' }} itemStyle={{ color: '#ffffff' }} cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} />
-                                                <Bar dataKey="value" fill="#3b82f6" radius={[0, 6, 6, 0]} label={{ position: 'right', fill: '#ffffff90', fontSize: 16, fontWeight: 'bold' }} />
+                                                <Bar dataKey="value" fill="#3b82f6" radius={[0, 6, 6, 0]} label={{ position: 'right', fill: '#ffffff90', fontSize: 18, fontWeight: 'bold' }} />
                                             </BarChart>
                                         </ResponsiveContainer>
                                     </div>
@@ -1279,7 +1279,7 @@ export default function AdminDashboard() {
                                 return (
                                     <>
                                         <div className="flex items-center justify-between p-6 border-b border-white/10 bg-slate-800/50 shrink-0">
-                                            <h3 className="text-xl font-bold text-white pr-8 leading-tight">{prompt}</h3>
+                                            <h3 className="text-2xl font-bold text-white pr-8 leading-tight">{prompt}</h3>
                                             <button onClick={() => setFullScreenChart(null)} className="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors absolute top-4 right-4 focus:outline-none">
                                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                                             </button>
@@ -1296,14 +1296,14 @@ export default function AdminDashboard() {
                                                             <feDropShadow dx="0" dy="0" stdDeviation="6" floodColor="#d946ef" floodOpacity="0.6" />
                                                         </filter>
                                                     </defs>
-                                                    <XAxis type="number" stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 14 }} />
-                                                    <YAxis dataKey="opt_value" type="category" width={350} tick={{ fill: '#ffffff80', fontSize: 14 }} />
+                                                    <XAxis type="number" stroke="#ffffff33" tick={{ fill: '#ffffff66', fontSize: 16 }} />
+                                                    <YAxis dataKey="opt_value" type="category" width={350} tick={{ fill: '#ffffff80', fontSize: 16 }} />
                                                     <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid #ffffff20', borderRadius: 8, fontSize: '14px' }} itemStyle={{ color: '#ffffff' }} cursor={{ fill: 'rgba(255, 255, 255, 0.05)' }} />
                                                     <Bar
                                                         dataKey="selection_count"
                                                         fill="url(#colorGlowModal)"
                                                         radius={[0, 8, 8, 0]}
-                                                        label={{ position: 'right', fill: '#ffffff90', fontSize: 16, fontWeight: 'bold' }}
+                                                        label={{ position: 'right', fill: '#ffffff90', fontSize: 18, fontWeight: 'bold' }}
                                                         shape={(props: any) => {
                                                             const { x, y, width, height } = props;
                                                             return <rect x={x} y={y + 6} width={width} height={Math.max(6, height - 12)} fill="url(#colorGlowModal)" rx={8} ry={8} filter="url(#glowEffectModal)" />;
@@ -1329,12 +1329,12 @@ export default function AdminDashboard() {
                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
-                                <h2 className="text-lg font-bold">Clear All Data</h2>
+                                <h2 className="text-xl font-bold">Clear All Data</h2>
                             </div>
-                            <p className="text-white/70 text-sm mb-4">
+                            <p className="text-white/70 text-base mb-4">
                                 You are about to permanently delete all respondent profiles, progress, and survey answers. <strong>This action cannot be undone.</strong>
                             </p>
-                            <p className="text-white/70 text-sm mb-2">
+                            <p className="text-white/70 text-base mb-2">
                                 Please type <span className="font-mono bg-black/30 px-1 py-0.5 rounded text-white font-bold select-all">saya setuju</span> to confirm.
                             </p>
                             <input
@@ -1351,7 +1351,7 @@ export default function AdminDashboard() {
                                         setShowClearModal(false);
                                         setClearInput('');
                                     }}
-                                    className="px-4 py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-colors"
+                                    className="px-4 py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg text-base transition-colors"
                                     disabled={isClearing}
                                 >
                                     Cancel
@@ -1359,7 +1359,7 @@ export default function AdminDashboard() {
                                 <button
                                     onClick={handleClearData}
                                     disabled={clearInput !== 'saya setuju' || isClearing}
-                                    className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-red-600/30 disabled:text-white/30 text-white rounded-lg text-sm font-medium transition-colors"
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-red-600/30 disabled:text-white/30 text-white rounded-lg text-base font-medium transition-colors"
                                 >
                                     {isClearing ? 'Deleting...' : 'Wipe Database'}
                                 </button>
@@ -1378,12 +1378,12 @@ export default function AdminDashboard() {
                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                                 </svg>
-                                <h2 className="text-lg font-bold">Restore All Data</h2>
+                                <h2 className="text-xl font-bold">Restore All Data</h2>
                             </div>
-                            <p className="text-white/70 text-sm mb-4">
+                            <p className="text-white/70 text-base mb-4">
                                 You are about to restore all soft-deleted respondents back to active status. They will reappear in all dashboard tabs.
                             </p>
-                            <p className="text-white/70 text-sm mb-2">
+                            <p className="text-white/70 text-base mb-2">
                                 Please type <span className="font-mono bg-black/30 px-1 py-0.5 rounded text-white font-bold select-all">saya setuju</span> to confirm.
                             </p>
                             <input
@@ -1400,7 +1400,7 @@ export default function AdminDashboard() {
                                         setShowRestoreModal(false);
                                         setRestoreInput('');
                                     }}
-                                    className="px-4 py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-colors"
+                                    className="px-4 py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg text-base transition-colors"
                                     disabled={isRestoring}
                                 >
                                     Cancel
@@ -1408,7 +1408,7 @@ export default function AdminDashboard() {
                                 <button
                                     onClick={handleRestoreData}
                                     disabled={restoreInput !== 'saya setuju' || isRestoring}
-                                    className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-green-600/30 disabled:text-white/30 text-white rounded-lg text-sm font-medium transition-colors"
+                                    className="px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-green-600/30 disabled:text-white/30 text-white rounded-lg text-base font-medium transition-colors"
                                 >
                                     {isRestoring ? 'Restoring...' : 'Restore Data'}
                                 </button>
@@ -1427,12 +1427,12 @@ export default function AdminDashboard() {
                                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                 </svg>
-                                <h2 className="text-lg font-bold">Permanently Delete All Data</h2>
+                                <h2 className="text-xl font-bold">Permanently Delete All Data</h2>
                             </div>
-                            <p className="text-white/70 text-sm mb-4">
+                            <p className="text-white/70 text-base mb-4">
                                 You are about to <strong className="text-red-400">PERMANENTLY DELETE</strong> all respondents in this deletion history from the database. <strong>This action bypasses soft-deletion and cannot be undone.</strong>
                             </p>
-                            <p className="text-white/70 text-sm mb-2">
+                            <p className="text-white/70 text-base mb-2">
                                 Please type <span className="font-mono bg-black/30 px-1 py-0.5 rounded text-white font-bold select-all">saya setuju</span> to confirm.
                             </p>
                             <input
@@ -1449,7 +1449,7 @@ export default function AdminDashboard() {
                                         setShowPermanentDeleteModal(false);
                                         setPermanentDeleteInput('');
                                     }}
-                                    className="px-4 py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg text-sm transition-colors"
+                                    className="px-4 py-2 text-white/60 hover:text-white hover:bg-white/5 rounded-lg text-base transition-colors"
                                     disabled={isPermanentDeleting}
                                 >
                                     Cancel
@@ -1457,7 +1457,7 @@ export default function AdminDashboard() {
                                 <button
                                     onClick={handlePermanentDeleteData}
                                     disabled={permanentDeleteInput !== 'saya setuju' || isPermanentDeleting}
-                                    className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-red-600/30 disabled:text-white/30 text-white rounded-lg text-sm font-medium transition-colors"
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:bg-red-600/30 disabled:text-white/30 text-white rounded-lg text-base font-medium transition-colors"
                                 >
                                     {isPermanentDeleting ? 'Deleting...' : 'Permanently Delete'}
                                 </button>
